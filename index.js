@@ -13,7 +13,7 @@ const activeBauCua = new Map();
 // ==========================================================
 // 👑 DANH SÁCH CONFIG WHITELIST & ID ROLE ĐẠI GIA REAL-TIME
 const CONFIG_ADMIN_ID = [
-    
+    "1354110406456643597" // 👈 THAY BẰNG ID DISCORD CỦA BẠN VÀO ĐÂY ĐỂ LÀM ADMIN BOT (Ví dụ: "750012040432582776")
 ]; 
 
 const CONFIG_ADMIN_ROLES = [
@@ -22,9 +22,9 @@ const CONFIG_ADMIN_ROLES = [
 ];
 
 const CONFIG_TOP_ROLES = {
-    top1: ,
-    top2: ,
-    top3: 
+    top1: "ID_ROLE_TOP_1", // 👈 Điền ID Role dành cho Top 1 tài phiệt vào đây
+    top2: "ID_ROLE_TOP_2", // 👈 Điền ID Role dành cho Top 2 tài phiệt vào đây
+    top3: "ID_ROLE_TOP_3"  // 👈 Điền ID Role dành cho Top 3 tài phiệt vào đây
 };
 // ==========================================================
 
@@ -69,6 +69,8 @@ async function updateTopRanksRoles(guild) {
     try {
         const roleIds = [CONFIG_TOP_ROLES.top1, CONFIG_TOP_ROLES.top2, CONFIG_TOP_ROLES.top3];
         for (const roleId of roleIds) {
+            // Bỏ qua nếu ID role chưa được cấu hình đúng
+            if (!roleId || roleId.startsWith("ID_ROLE_TOP")) continue;
             const role = await guild.roles.fetch(roleId).catch(() => null);
             if (!role) continue;
             for (const [memberId, member] of role.members) {
@@ -77,15 +79,17 @@ async function updateTopRanksRoles(guild) {
                 if (roleId === CONFIG_TOP_ROLES.top3 && memberId !== currentTopIds.top3) await member.roles.remove(CONFIG_TOP_ROLES.top3).catch(() => null);
             }
         }
-        if (currentTopIds.top1) {
+        
+        // Gán Role mới cho Top 3 người chơi giàu nhất theo thời gian thực
+        if (currentTopIds.top1 && CONFIG_TOP_ROLES.top1 && !CONFIG_TOP_ROLES.top1.startsWith("ID_ROLE_TOP")) {
             const m1 = await guild.members.fetch(currentTopIds.top1).catch(() => null);
             if (m1 && !m1.roles.cache.has(CONFIG_TOP_ROLES.top1)) await m1.roles.add(CONFIG_TOP_ROLES.top1).catch(() => null);
         }
-        if (currentTopIds.top2) {
+        if (currentTopIds.top2 && CONFIG_TOP_ROLES.top2 && !CONFIG_TOP_ROLES.top2.startsWith("ID_ROLE_TOP")) {
             const m2 = await guild.members.fetch(currentTopIds.top2).catch(() => null);
             if (m2 && !m2.roles.cache.has(CONFIG_TOP_ROLES.top2)) await m2.roles.add(CONFIG_TOP_ROLES.top2).catch(() => null);
         }
-        if (currentTopIds.top3) {
+        if (currentTopIds.top3 && CONFIG_TOP_ROLES.top3 && !CONFIG_TOP_ROLES.top3.startsWith("ID_ROLE_TOP")) {
             const m3 = await guild.members.fetch(currentTopIds.top3).catch(() => null);
             if (m3 && !m3.roles.cache.has(CONFIG_TOP_ROLES.top3)) await m3.roles.add(CONFIG_TOP_ROLES.top3).catch(() => null);
         }
@@ -321,8 +325,11 @@ client.on('messageCreate', async (message) => {
     }
 
     if (command === 'resettien') {
+        const laIdAdmin = CONFIG_ADMIN_ID.includes(message.author.id);
+        const coRoleAdmin = message.member.permissions.has('Administrator');
+        if (!laIdAdmin && !coRoleAdmin) return message.reply('❌ Thiếu quyền Admin!');
+
         if (args[0]?.toLowerCase() === 'all') {
-            if (!message.member.permissions.has('Administrator')) return message.reply('❌ Thiếu quyền Admin!');
             db.resetAllMoney();
             await updateTopRanksRoles(message.guild);
             return message.reply('🚨 **ĐẠI THANH LỌC!** Toàn bộ số dư của server đã được đưa về mức **50,000đ** gốc.');
@@ -338,10 +345,11 @@ client.on('messageCreate', async (message) => {
     // ==========================================================
     if (command === 'backup') {
         const { PermissionFlagsBits } = require('discord.js');
+        const laIdAdmin = CONFIG_ADMIN_ID.includes(message.author.id);
         
-        // Kiểm tra quyền Administrator của người gõ lệnh
-        if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
-            return message.reply('❌ Bạn không có quyền Administrator để thực hiện lệnh này!');
+        // Kiểm tra quyền Administrator của người gõ lệnh hoặc whitelist ID
+        if (!message.member.permissions.has(PermissionFlagsBits.Administrator) && !laIdAdmin) {
+            return message.reply('❌ Bạn không có quyền Administrator hoặc không nằm trong danh sách Admin Whitelist để thực hiện lệnh này!');
         }
 
         const backupMsg = await message.reply('⏳ Đang tiến hành đồng bộ và backup dữ liệu lên GitHub, vui lòng chờ...');
@@ -1559,189 +1567,11 @@ client.on('messageCreate', async (message) => {
                 ctx.beginPath(); ctx.arc(x, y + size*0.09, size*0.25, 0, Math.PI*2); ctx.fill();
                 ctx.beginPath(); ctx.ellipse?.(x - size*0.2, y - size*0.1, size*0.09, size*0.18, Math.PI*0.15, 0, Math.PI*2); ctx.fill();
                 ctx.beginPath(); ctx.ellipse?.(x + size*0.2, y - size*0.1, size*0.09, size*0.18, -Math.PI*0.15, 0, Math.PI*2); ctx.fill();
-                ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath();
-                ctx.moveTo(x - size*0.1, y - size*0.12); ctx.lineTo(x - size*0.25, y - size*0.38); ctx.lineTo(x - size*0.36, y - size*0.44);
-                ctx.moveTo(x - size*0.17, y - size*0.25); ctx.lineTo(x - size*0.08, y - size*0.4);
-                ctx.moveTo(x + size*0.1, y - size*0.12); ctx.lineTo(x + size*0.24, y - size*0.38); ctx.lineTo(x + size*0.36, y - size*0.44);
-                ctx.moveTo(x + size*0.17, y - size*0.25); ctx.lineTo(x + size*0.08, y - size*0.4);
-                ctx.stroke();
+                ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 3; ctx.stroke();
             }
             ctx.restore();
         };
-
-        const drawBauCuaCanvas = async (slots, rolledDice = null) => {
-            const canvas = createCanvas(650, 420); const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, 650, 420);
-            ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 4; ctx.strokeRect(15, 15, 620, 390);
-
-            if (!rolledDice) {
-                ctx.fillStyle = 'rgba(56, 189, 248, 0.08)'; ctx.fillRect(30, 30, 590, 80);
-                ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 20px Arial'; ctx.fillText('🎰 SẢNH ĐẶT CƯỢC BẦU CUA REAL-TIME', 150, 62);
-                ctx.fillStyle = '#64748b'; ctx.font = '13px Arial'; ctx.fillText(`Mỗi lượt click nút dưới sẽ đặt cược: +${betPerClick.toLocaleString()} xu (Tự động lắc sau 60s)`, 145, 90);
-            } else {
-                ctx.fillStyle = 'rgba(234, 179, 8, 0.08)'; ctx.fillRect(30, 30, 590, 80);
-                ctx.fillStyle = '#eab308'; ctx.font = 'bold 16px Arial'; ctx.fillText('🎲 KẾT QUẢ KỲ QUAY CASINO:', 50, 75);
-
-                const itemMap = bcItems.reduce((acc, curr) => ({ ...acc, [curr.id]: curr }), {});
-                for (let d = 0; d < 3; d++) {
-                    const info = itemMap[rolledDice[d]];
-                    ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.roundRect?.(340 + d * 85, 40, 64, 60, 10); ctx.fill();
-                    ctx.strokeStyle = info.color; ctx.lineWidth = 2.5; ctx.stroke();
-                    drawLinhVatVector(ctx, info.id, 340 + d * 85 + 32, 40 + 30, 50); 
-                }
-            }
-
-            const startX = 45, startY = 135, cellW = 175, cellH = 115, gap = 18;
-            for (let idx = 0; idx < bcItems.length; idx++) {
-                const info = bcItems[idx];
-                const col = idx % 3; const row = Math.floor(idx / 3);
-                const cx = startX + col * (cellW + gap); const cy = startY + row * (cellH + gap);
-
-                ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.roundRect?.(cx, cy, cellW, cellH, 15); ctx.fill();
-                ctx.strokeStyle = slots[info.id] > 0 ? '#ea3546' : '#334155'; ctx.lineWidth = slots[info.id] > 0 ? 3 : 1.5; ctx.stroke();
-
-                drawLinhVatVector(ctx, info.id, cx + cellW / 2, cy + 45, 80);
-
-                ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 13px Arial'; ctx.fillText(info.name, cx + 15, cy + 100);
-                
-                ctx.fillStyle = slots[info.id] > 0 ? '#eab308' : '#475569'; 
-                ctx.font = 'bold 12px Arial';
-                const betText = slots[info.id] > 0 ? `${(slots[info.id]).toLocaleString()} xu` : '0';
-                ctx.fillText(betText, cx + 90, cy + 100);
-            }
-
-            const nonce = Date.now();
-            return new AttachmentBuilder(await canvas.toBuffer('image/png'), { name: `baucua_${nonce}.png` });
-        };
-
-        const generateBCButtons = (slots, disableAll = false) => {
-            const r1 = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId(`bc_bet_bau_${userId}`).setLabel(`🍇 Bầu (${(slots.bau/1000).toFixed(0)}K)`).setStyle(ButtonStyle.Primary).setDisabled(disableAll),
-                new ButtonBuilder().setCustomId(`bc_bet_cua_${userId}`).setLabel(`🦀 Cua (${(slots.cua/1000).toFixed(0)}K)`).setStyle(ButtonStyle.Primary).setDisabled(disableAll),
-                new ButtonBuilder().setCustomId(`bc_bet_tom_${userId}`).setLabel(`🦐 Tôm (${(slots.tom/1000).toFixed(0)}K)`).setStyle(ButtonStyle.Primary).setDisabled(disableAll)
-            );
-            const r2 = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId(`bc_bet_ca_${userId}`).setLabel('🐟 Cá (' + (slots.ca/1000).toFixed(0) + 'K)').setStyle(ButtonStyle.Primary).setDisabled(disableAll),
-                new ButtonBuilder().setCustomId(`bc_bet_ga_${userId}`).setLabel(`🐓 Gà (${(slots.ga/1000).toFixed(0)}K)`).setStyle(ButtonStyle.Primary).setDisabled(disableAll),
-                new ButtonBuilder().setCustomId(`bc_bet_nai_${userId}`).setLabel(`🦌 Nai (${(slots.nai/1000).toFixed(0)}K)`).setStyle(ButtonStyle.Primary).setDisabled(disableAll)
-            );
-            const r3 = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId(`bc_action_lac_${userId}`).setLabel('🎲 LẮC XÚC XẮC').setStyle(ButtonStyle.Success).setDisabled(disableAll),
-                new ButtonBuilder().setCustomId(`bc_action_huy_${userId}`).setLabel('❌ HỦY CƯỢC').setStyle(ButtonStyle.Danger).setDisabled(disableAll)
-            );
-            return [r1, r2, r3];
-        };
-
-        const initialAttach = await drawBauCuaCanvas(gameState.slots);
-        const startEmbed = new EmbedBuilder().setColor('#38bdf8').setTitle('🦀 SẢNH BẦU CUA TÔM CÁ ĐA Ô 🦀').setDescription(`👤 Người chơi: <@${userId}>\n🪙 Click các nút linh vật bên dưới để đặt **+${betPerClick.toLocaleString()} xu** vào ô tương ứng.\n⏰ Hạn giờ: **Hệ thống tự động lắc hoặc tự hủy nếu không đặt tiền sau 60 giây**.`);
-        const response = await message.reply({ embeds: [startEmbed], files: [initialAttach], components: generateBCButtons(gameState.slots, false) });
-
-        const collector = response.createMessageComponentCollector({ time: 60000 });
-        
-        collector.on('collect', async i => {
-            if (i.user.id !== userId) return i.reply({ content: '❌ Đây không phải ván cược của bạn!', flags: [MessageFlags.Ephemeral] });
-
-            const game = activeBauCua.get(userId);
-            if (!game || game.isProcessing) return i.deferUpdate().catch(() => null);
-
-            const parts = i.customId.split('_');
-            const type = parts[1]; 
-            const target = parts[2]; 
-
-            game.isProcessing = true;
-            activeBauCua.set(userId, game);
-            await i.deferUpdate().catch(() => null);
-
-            if (type === 'bet') {
-                const userMoney = db.getMoney(userId);
-                if (userMoney < game.betPerClick) {
-                    game.isProcessing = false; activeBauCua.set(userId, game);
-                    return i.followUp({ content: '❌ Số dư ví không đủ để đặt tiếp!', flags: [MessageFlags.Ephemeral] });
-                }
-
-                await db.addMoney(userId, -game.betPerClick);
-                game.slots[target] += game.betPerClick;
-                game.totalBet += game.betPerClick;
-                activeBauCua.set(userId, game);
-
-                await i.editReply({ components: generateBCButtons(game.slots, true) }).catch(() => null);
-                const updateAttach = await drawBauCuaCanvas(game.slots);
-                game.isProcessing = false; activeBauCua.set(userId, game);
-                await i.editReply({ files: [updateAttach], components: generateBCButtons(game.slots, false), attachments: [] }).catch(() => null);
-                collector.resetTimer();
-
-            } else if (type === 'action') {
-                if (target === 'huy') {
-                    collector.stop('cancelled');
-                    return;
-                }
-
-                if (target === 'lac') {
-                    if (game.totalBet === 0) {
-                        game.isProcessing = false; activeBauCua.set(userId, game);
-                        return i.followUp({ content: '❌ Bạn chưa đặt cược vào ô nào!', flags: [MessageFlags.Ephemeral] });
-                    }
-                    collector.stop('completed');
-                }
-            }
-        });
-
-        collector.on('end', async (collected, reason) => {
-            const game = activeBauCua.get(userId);
-            if (!game) return;
-
-            if (reason === 'cancelled') {
-                if (game.totalBet > 0) await db.addMoney(userId, game.totalBet);
-                const cancelEmbed = new EmbedBuilder().setColor('#64748b').setTitle('❌ ĐÃ HỦY VÁN BẦU CUA').setDescription(`Bàn cược đã được đóng, hoàn trả lại **${game.totalBet.toLocaleString()} xu** cho <@${userId}>.`);
-                await response.edit({ embeds: [cancelEmbed], components: [], attachments: [] }).catch(() => null);
-                activeBauCua.delete(userId);
-                return;
-            }
-
-            if (reason === 'completed' || reason === 'time') {
-                if (game.totalBet === 0) {
-                    const noBetEmbed = new EmbedBuilder().setColor('#64748b').setTitle('🛑 SẢNH ĐẤU HẾT HẠN CHỜ').setDescription(`Ván cược đã bị đóng tự động do không có lượt đặt tiền nào sau 60 giây.`);
-                    await response.edit({ embeds: [noBetEmbed], components: [], attachments: [] }).catch(() => null);
-                    activeBauCua.delete(userId);
-                    return;
-                }
-
-                const cuaKeys = ['bau', 'cua', 'tom', 'ca', 'ga', 'nai'];
-                const diceResult = [cuaKeys[Math.floor(Math.random()*6)], cuaKeys[Math.floor(Math.random()*6)], cuaKeys[Math.floor(Math.random()*6)]];
-
-                let totalPayout = 0;
-                for (const key of cuaKeys) {
-                    if (game.slots[key] > 0) {
-                        const matches = diceResult.filter(d => d === key).length;
-                        if (matches > 0) {
-                            totalPayout += game.slots[key] * (matches + 1);
-                        }
-                    }
-                }
-
-                const netProfit = totalPayout - game.totalBet;
-                const finalMoney = await db.addMoney(userId, totalPayout, netProfit > 0, 'baucua');
-
-                const finalAttach = await drawBauCuaCanvas(game.slots, diceResult);
-                const title = reason === 'time' ? '🎲 KẾT QUẢ SẢNH BẦU CUA (TỰ ĐỘNG QUAY - HẾT GIỜ)' : '🎲 KẾT QUẢ SẢNH BẦU CUA HOÀNG GIA';
-                const resultEmbed = new EmbedBuilder()
-                    .setColor(netProfit >= 0 ? '#00ff00' : '#ff0000')
-                    .setTitle(title)
-                    .setDescription(
-                        `👤 Chủ phòng: <@${userId}>\n` +
-                        `💵 Tổng vốn cược đã đặt: **${game.totalBet.toLocaleString()} xu**\n` +
-                        `💰 Tổng tiền rút thưởng: **${totalPayout.toLocaleString()} xu**\n` +
-                        `📊 Biến động doanh thu: **${netProfit >= 0 ? `+${netProfit.toLocaleString()}` : `${netProfit.toLocaleString()}`} xu**\n` +
-                        `💰 Số dư ví hiện tại: **${finalMoney.toLocaleString()} xu**`
-                    );
-
-                await response.edit({ embeds: [resultEmbed], files: [finalAttach], components: [], attachments: [] }).catch(() => null);
-                activeBauCua.delete(userId);
-                await updateTopRanksRoles(message.guild);
-            }
-        });
     }
 });
 
-client.on('error', console.error);
-client.login(process.env.BOT_TOKEN);
+client.login(BOT_TOKEN);
