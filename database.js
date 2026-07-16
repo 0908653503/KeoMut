@@ -145,7 +145,7 @@ function saveData(data) {
 
 function createDefaultUser() {
     return { 
-        money: 0, 
+        money: 50000, // Đã sửa từ 0 thành 50000 để tránh lỗi reset tài sản khi người dùng mới nhắn tin
         lastDaily: 0, 
         maxWinBet: 0,
         streak: 0, 
@@ -192,7 +192,7 @@ function ensureUserExists(data, guildId, userId) {
 module.exports = {
     getMoney: (guildId, userId) => {
         const data = getData();
-        return data.users?.[guildId]?.[userId]?.money || 0;
+        return data.users?.[guildId]?.[userId]?.money !== undefined ? data.users[guildId][userId].money : 50000;
     },
     
     hasUser: (guildId, userId) => {
@@ -228,7 +228,7 @@ module.exports = {
         const guildUsers = data.users?.[guildId] || {};
         
         const sortedUsers = Object.entries(guildUsers)
-            .map(([id, info]) => ({ id, money: info.money || 0 }))
+            .map(([id, info]) => ({ id, money: info.money !== undefined ? info.money : 50000 }))
             .sort((a, b) => b.money - a.money);
             
         const rankIndex = sortedUsers.findIndex(u => u.id === userId);
@@ -243,7 +243,7 @@ module.exports = {
         const guildUsers = data.users?.[guildId] || {};
         
         return Object.entries(guildUsers)
-            .map(([id, info]) => ({ id, money: info.money || 0 }))
+            .map(([id, info]) => ({ id, money: info.money !== undefined ? info.money : 50000 }))
             .sort((a, b) => b.money - a.money)
             .slice(0, 10);
     },
@@ -309,11 +309,23 @@ module.exports = {
     },
 
     getTaiXiuHistory: () => getData().taixiuHistory || [],
+    
     createGiftcode: (codeName, money, maxUses) => {
         const data = getData();
         if (!data.giftcodes) data.giftcodes = {};
         data.giftcodes[codeName] = { money, maxUses, usedUsers: [] };
         saveData(data);
+    },
+
+    // Hàm mới: Hỗ trợ xóa giftcode nhanh chóng
+    deleteGiftcode: (codeName) => {
+        const data = getData();
+        if (!data.giftcodes || !data.giftcodes[codeName]) {
+            return false;
+        }
+        delete data.giftcodes[codeName];
+        saveData(data);
+        return true;
     },
 
     redeemGiftcode: (guildId, userId, codeName) => {
@@ -342,7 +354,6 @@ module.exports = {
         if (userClaimIndex !== -1) {
             code.usedUsers[userClaimIndex].claimedAt = Date.now();
         } else {
-            // Lưu thêm guildId vào lịch sử sử dụng code của hệ thống giftcode
             code.usedUsers.push({ guildId, userId, claimedAt: Date.now() });
         }
 

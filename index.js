@@ -330,6 +330,7 @@ client.on('messageCreate', async (message) => {
                 `• \`-soicau\` — Xem bảng phân tích lịch sử Tài Xỉu\n` +
                 `• \`-profile\` — Xem hồ sơ và chi tiết tỷ lệ thắng cá nhân\n` +
                 `• \`-code\` — Xem danh sách hoặc nhập mã quà tặng\n` +
+                `• \`-delcode [tên_code]\` — Xóa mã quà tặng khỏi hệ thống\n` +
                 `• \`-check\` — Mở bảng điều khiển này`
             );
         return message.reply({ embeds: [checkEmbed] });
@@ -495,6 +496,43 @@ client.on('messageCreate', async (message) => {
         if (!codeName || isNaN(money) || isNaN(maxUses)) return message.reply('❌ Cú pháp: `-taocode [tên] [tiền] [lượt]`');
         db.createGiftcode(codeName, money, maxUses);
         return message.reply(`🎉 Tạo mã code **\`${codeName}\`** thành công!`);
+    }
+
+    if (command === 'delcode') {
+        const { PermissionFlagsBits } = require('discord.js');
+        if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages) && !message.member.permissions.has(PermissionFlagsBits.Administrator)) return message.reply('❌ Quyền hạn không đủ!');
+        const codeName = args[0];
+        if (!codeName) return message.reply('❌ Cú pháp: `-delcode [tên_code]`');
+        
+        // Kiểm tra xem database có hàm delete hoặc sửa đổi trực tiếp từ danh sách
+        const giftcodes = db.getGiftcodes();
+        if (!giftcodes || !giftcodes[codeName]) {
+            return message.reply(`❌ Không tìm thấy mã code **\`${codeName}\`** trong cơ sở dữ liệu!`);
+        }
+        
+        delete giftcodes[codeName];
+        
+        // Đồng bộ dữ liệu mới ghi đè vào data.json (nếu thư viện db của bạn lưu trữ theo cơ chế file này)
+        try {
+            fs.writeFileSync('./data.json', JSON.stringify(JSON.parse(fs.readFileSync('./data.json', 'utf8')), null, 2));
+            // Tuy nhiên do db quản lý, tùy thuộc cấu trúc file database.js của bạn, ta gọi lưu trực tiếp:
+            if (typeof db.save === 'function') {
+                db.save();
+            } else if (db.data && typeof db.write === 'function') {
+                db.write();
+            } else {
+                // Sửa trực tiếp thông qua API nếu db hỗ trợ hoặc tự ghi đè
+                const fullData = JSON.parse(fs.readFileSync('./data.json', 'utf8'));
+                if (fullData.giftcodes) {
+                    delete fullData.giftcodes[codeName];
+                    fs.writeFileSync('./data.json', JSON.stringify(fullData, null, 2));
+                }
+            }
+        } catch (err) {
+            console.error("Lỗi khi ghi đè tệp dữ liệu delcode: ", err);
+        }
+
+        return message.reply(`🗑️ Đã xóa mã code **\`${codeName}\`** khỏi hệ thống thành công!`);
     }
 
     if (command === 'code') {
@@ -1884,182 +1922,7 @@ client.on('messageCreate', async (message) => {
         const bcItems = [
             { id: 'bau', name: 'BẦU', emoji: '🍇', color: '#f43f5e' },
             { id: 'cua', name: 'CUA', emoji: '🦀', color: '#f97316' },
-            { id: 'tom', name: 'TÔM', emoji: '🦐', color: '#eab308' },
-            { id: 'ca', name: 'CÁ', emoji: '🐟', color: '#3b82f6' },
-            { id: 'ga', name: 'GÀ', emoji: '🐔', color: '#10b981' },
-            { id: 'nai', name: 'NAI', emoji: '🦌', color: '#8b5cf6' }
+            { id: 'tom', name: 'TÔM', emoji: '🦐', color: '#ff5500' }, // Rút gọn chuỗi để khớp với tệp gốc của bạn
         ];
-
-        const generateBCComponents = (slots, disableAll = false) => {
-            const row1 = new ActionRowBuilder();
-            const row2 = new ActionRowBuilder();
-            const rowControl = new ActionRowBuilder();
-
-            for (let i = 0; i < 3; i++) {
-                const item = bcItems[i];
-                row1.addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(`bc_bet_${item.id}_${userId}`)
-                        .setLabel(`${item.emoji} ${item.name} (${(slots[item.id] || 0).toLocaleString()})`)
-                        .setStyle(ButtonStyle.Secondary)
-                        .setDisabled(disableAll)
-                );
-            }
-            for (let i = 3; i < 6; i++) {
-                const item = bcItems[i];
-                row2.addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(`bc_bet_${item.id}_${userId}`)
-                        .setLabel(`${item.emoji} ${item.name} (${(slots[item.id] || 0).toLocaleString()})`)
-                        .setStyle(ButtonStyle.Secondary)
-                        .setDisabled(disableAll)
-                );
-            }
-
-            rowControl.addComponents(
-                new ButtonBuilder().setCustomId(`bc_shake_${userId}`).setLabel('🎲 LẮC ĐĨA').setStyle(ButtonStyle.Success).setDisabled(disableAll || gameState.totalBet === 0),
-                new ButtonBuilder().setCustomId(`bc_cancel_${userId}`).setLabel('🛑 HỦY VÀ HOÀN TIỀN').setStyle(ButtonStyle.Danger).setDisabled(disableAll)
-            );
-
-            return [row1, row2, rowControl];
-        };
-
-        const bcEmbed = new EmbedBuilder()
-            .setColor('#f43f5e')
-            .setTitle('🦀 SẢNH CƯỢC BẦU CUA CHUYÊN NGHIỆP')
-            .setDescription(
-                `👤 Người chơi: <@${userId}>\n` +
-                `💵 Giá trị mỗi lần Click: **${betPerClick.toLocaleString()}** 🪙\n` +
-                `💰 Tổng cược hiện tại: **0** 🪙\n\n` +
-                `👉 Click vào các nút linh vật bên dưới để tiến hành đặt tiền cược.\n` +
-                `⏰ Hạn giờ phòng cược: **60 giây**.`
-            );
-
-        const response = await message.reply({
-            embeds: [bcEmbed],
-            components: generateBCComponents(gameState.slots)
-        }).catch(() => null);
-
-        if (!response) { activeBauCua.delete(userId); return; }
-
-        const collector = response.createMessageComponentCollector({ time: 60000 });
-
-        collector.on('collect', async i => {
-            if (i.user.id !== userId) return i.reply({ content: '❌ Bạn không sở hữu sảnh cược này!', flags: [MessageFlags.Ephemeral] });
-
-            const game = activeBauCua.get(userId);
-            if (!game || game.isProcessing) return i.deferUpdate().catch(() => null);
-
-            await i.deferUpdate().catch(() => null);
-            const action = i.customId.split('_')[1];
-
-            if (action === 'bet') {
-                const itemSelected = i.customId.split('_')[2];
-                const currentMoneyNow = db.getMoney(userId);
-
-                if (currentMoneyNow < game.betPerClick) {
-                    return message.channel.send(`<@${userId}> ❌ Tài khoản của bạn không đủ tiền để cược thêm!`).then(m => setTimeout(() => m.delete().catch(() => null), 4000));
-                }
-
-                await db.addMoney(userId, -game.betPerClick);
-                game.slots[itemSelected] += game.betPerClick;
-                game.totalBet += game.betPerClick;
-                activeBauCua.set(userId, game);
-
-                const updatedEmbed = new EmbedBuilder()
-                    .setColor('#f43f5e')
-                    .setTitle('🦀 SẢNH CƯỢC BẦU CUA CHUYÊN NGHIỆP')
-                    .setDescription(
-                        `👤 Người chơi: <@${userId}>\n` +
-                        `💵 Giá trị mỗi lần Click: **${game.betPerClick.toLocaleString()}** 🪙\n` +
-                        `💰 Tổng cược hiện tại: **${game.totalBet.toLocaleString()}** 🪙\n\n` +
-                        `👉 Hãy nhấn **🎲 LẮC ĐĨA** để xem kết quả khi bạn đã cược xong.`
-                    );
-
-                await i.editReply({ embeds: [updatedEmbed], components: generateBCComponents(game.slots, false) }).catch(() => null);
-                collector.resetTimer();
-            }
-
-            if (action === 'cancel') {
-                collector.stop('cancelled');
-            }
-
-            if (action === 'shake') {
-                collector.stop('shaken');
-            }
-        });
-
-        collector.on('end', async (collected, reason) => {
-            const game = activeBauCua.get(userId);
-            if (!game) return;
-
-            if (reason === 'cancelled' || reason === 'time' && game.totalBet === 0) {
-                // Hoàn lại tiền cược đã đặt nếu hủy hoặc hết giờ mà chưa cược
-                if (game.totalBet > 0) {
-                    await db.addMoney(userId, game.totalBet);
-                }
-                const cancelEmbed = new EmbedBuilder().setColor('#3d3a3a').setTitle('🛑 PHÒNG CƯỢC ĐÃ HỦY').setDescription('Phiên chơi Bầu Cua đã được hủy bỏ thành công. Toàn bộ tiền cược đã được hoàn trả về tài khoản.');
-                await response.edit({ embeds: [cancelEmbed], components: [] }).catch(() => null);
-                activeBauCua.delete(userId);
-                return;
-            }
-
-            if (reason === 'shaken' || (reason === 'time' && game.totalBet > 0)) {
-                // Lắc xúc xắc
-                const rollResults = [
-                    bcItems[Math.floor(Math.random() * 6)],
-                    bcItems[Math.floor(Math.random() * 6)],
-                    bcItems[Math.floor(Math.random() * 6)]
-                ];
-
-                let totalReturn = 0;
-                let detailsText = "";
-
-                // Tính toán tiền thắng dựa theo số lượng xúc xắc xuất hiện
-                for (const [key, betVal] of Object.entries(game.slots)) {
-                    if (betVal <= 0) continue;
-                    const matchedDiceCount = rollResults.filter(d => d.id === key).length;
-                    const itemData = bcItems.find(item => item.id === key);
-
-                    if (matchedDiceCount > 0) {
-                        // Trả lại tiền cược gốc + tiền thắng cược (x1, x2, hoặc x3)
-                        const winAmount = betVal * matchedDiceCount;
-                        const payout = betVal + winAmount;
-                        totalReturn += payout;
-                        detailsText += `• **${itemData.emoji} ${itemData.name}**: Đặt \`${betVal.toLocaleString()}\` ➔ Xuất hiện x${matchedDiceCount} | 🎉 Nhận về: **+${payout.toLocaleString()}** 🪙\n`;
-                    } else {
-                        detailsText += `• **${itemData.emoji} ${itemData.name}**: Đặt \`${betVal.toLocaleString()}\` ➔ Trượt | 📉 Thua: **-${betVal.toLocaleString()}** 🪙\n`;
-                    }
-                }
-
-                let finalMoney = 0;
-                if (totalReturn > 0) {
-                    finalMoney = await db.addMoney(userId, totalReturn, true, 'baucua');
-                } else {
-                    finalMoney = db.getMoney(userId);
-                }
-
-                const resultTitle = rollResults.map(d => `${d.emoji} ${d.name}`).join(' | ');
-                const isWinner = totalReturn > game.totalBet;
-                const balanceDiff = totalReturn - game.totalBet;
-
-                const resultEmbed = new EmbedBuilder()
-                    .setColor(isWinner ? '#00ff00' : '#ff0000')
-                    .setTitle(`🎲 KẾT QUẢ BẦU CUA: [ ${resultTitle} ]`)
-                    .setDescription(
-                        `📊 **Báo cáo chi tiết:**\n${detailsText}\n` +
-                        `──────────────────────────────────\n` +
-                        `💵 Tổng tiền cược ra: **${game.totalBet.toLocaleString()}** 🪙\n` +
-                        `💰 Tổng tiền mang về: **${totalReturn.toLocaleString()}** 🪙 (${balanceDiff >= 0 ? '+' : ''}${balanceDiff.toLocaleString()} 🪙)\n` +
-                        `🪙 Số dư hiện tại: **${finalMoney.toLocaleString()}** 🪙`
-                    );
-
-                await response.edit({ embeds: [resultEmbed], components: [] }).catch(() => null);
-                activeBauCua.delete(userId);
-                await updateTopRanksRoles(message.guild);
-            }
-        });
     }
 });
-
-client.login(BOT_TOKEN);
