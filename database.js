@@ -364,7 +364,7 @@ module.exports = {
         return getData().users || {};
     },
 
-    resetUserMoney: (userId) => {
+    const resetUserMoney = (userId) => {
         const data = getData();
         if (data.users[userId]) { data.users[userId].money = 50000; saveData(data); }
         return 50000;
