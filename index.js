@@ -543,6 +543,37 @@ client.on('messageCreate', async (message) => {
         return message.reply('🔄 Đã đặt lại ví của <@' + target.id + '> về mức **50,000đ**.');
     }
 
+    if (command === 'resetbxh') {
+        // 1. Kiểm tra quyền hạn Admin (Id Admin hoặc Role Whitelist)
+        const laIdAdmin = CONFIG_ADMIN_ID.includes(message.author.id);
+        const coRoleAdmin = message.member.roles.cache.some(role => CONFIG_ADMIN_ROLES.includes(role.id));
+        if (!laIdAdmin && !coRoleAdmin) {
+            return message.reply('❌ Bạn không có quyền hạn Admin để thực hiện lệnh reset bảng xếp hạng này!');
+        }
+
+        // 2. Thực hiện reset toàn bộ tiền của Server về mức 50,000đ mặc định
+        db.resetAllMoney(); 
+
+        // 3. Tiến hành quét và thu hồi các Role Đại gia (Top 1, 2, 3) hiện tại trên server
+        try {
+            const roleIds = [CONFIG_TOP_ROLES.top1, CONFIG_TOP_ROLES.top2, CONFIG_TOP_ROLES.top3];
+            for (const roleId of roleIds) {
+                const role = await message.guild.roles.fetch(roleId).catch(() => null);
+                if (!role) continue;
+                for (const [memberId, member] of role.members) {
+                    await member.roles.remove(roleId).catch(() => null);
+                }
+            }
+        } catch (err) {
+            console.log("Lỗi khi thu hồi các danh hiệu đại gia khi reset bxh:", err);
+        }
+
+        // 4. Đồng bộ hóa, cập nhật lại trạng thái Role Real-time ngay lập tức
+        await updateTopRanksRoles(message.guild);
+
+        return message.reply('🧹 **ĐẠI THANH LỌC THÀNH CÔNG!** Bảng xếp hạng đã được reset. Toàn bộ số dư của thành viên đã quay về mốc **50.000đ** mặc định và các danh hiệu Đại Gia đã được thu hồi.');
+    }
+
     if (command === 'backup') {
         const { PermissionFlagsBits } = require('discord.js');
         if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
