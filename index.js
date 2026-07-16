@@ -351,7 +351,7 @@ client.on('messageCreate', async (message) => {
             const parsedData = JSON.parse(rawData);
 
             const GITHUB_TOKEN = process.env.GITHUB_TOKEN; 
-            const GITHUB_REPO = "emsgachacity/nhaduc"; 
+            const GITHUB_REPO = "0908653503/KeoMut"; 
             const GITHUB_FILE_PATH = "data.json"; 
 
             if (!GITHUB_TOKEN) {
