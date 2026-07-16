@@ -15,12 +15,12 @@ const activeCrash = new Map(); // Lưu trữ game Crash tập thể theo Kênh (
 // ==========================================================
 // 👑 DANH SÁCH CONFIG WHITELIST & ID ROLE ĐẠI GIA REAL-TIME
 const CONFIG_ADMIN_ID = [
-    "1318231594162454573"
+    "1354110406456643597"
 ]; 
 
 const CONFIG_ADMIN_ROLES = [
-    "1494388988272705686",
-    "1457029879941042206"
+    "1457040413020913685",
+    "1494228787469090988"
 ];
 
 const CONFIG_TOP_ROLES = {
@@ -105,7 +105,7 @@ client.once('ready', () => {
 // ==========================================================
 async function drawRocketCanvas(currentMultiplier, isCrashed = false) {
     const canvas = createCanvas(600, 350);
-    const ctx = canvas.getContext('2d');0908653503/KeoMut
+    const ctx = canvas.getContext('2d');
 
     // 1. Phông nền Không gian chuyển sắc Gradient sâu thẳm
     const bgGrad = ctx.createLinearGradient(0, 0, 0, 350);
@@ -554,7 +554,7 @@ client.on('messageCreate', async (message) => {
             const rawData = fs.readFileSync('./data.json', 'utf8');
             const parsedData = JSON.parse(rawData);
             const GITHUB_TOKEN = process.env.GITHUB_TOKEN; 
-            const GITHUB_REPO = "0908653503/KeoMut"; 
+            const GITHUB_REPO = "emsgachacity/nhaduc"; 
             const GITHUB_FILE_PATH = "data.json"; 
             if (!GITHUB_TOKEN) return backupMsg.edit('❌ Không tìm thấy GITHUB_TOKEN.');
 
