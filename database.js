@@ -181,15 +181,30 @@ function getMsUntilVNTomorrow() {
     return vnTomorrow - vnTime;
 }
 
+// Hàm bổ trợ để khởi tạo cấu trúc guild/user nếu chưa có trong data
+function ensureUserExists(data, guildId, userId) {
+    if (!data.users) data.users = {};
+    if (!data.users[guildId]) data.users[guildId] = {};
+    if (!data.users[guildId][userId]) data.users[guildId][userId] = createDefaultUser();
+    return data.users[guildId][userId];
+}
+
 module.exports = {
-    getMoney: (userId) => getData().users[userId]?.money || 0,
-    hasUser: (userId) => !!getData().users[userId],
+    getMoney: (guildId, userId) => {
+        const data = getData();
+        return data.users?.[guildId]?.[userId]?.money || 0;
+    },
+    
+    hasUser: (guildId, userId) => {
+        const data = getData();
+        return !!data.users?.[guildId]?.[userId];
+    },
+
     getGiftcodes: () => getData().giftcodes || {},
 
-    addMoney: (userId, amount, isWin = null, gameType = null) => {
+    addMoney: (guildId, userId, amount, isWin = null, gameType = null) => {
         const data = getData();
-        if (!data.users[userId]) data.users[userId] = createDefaultUser();
-        const user = data.users[userId];
+        const user = ensureUserExists(data, guildId, userId);
         user.money += amount;
 
         if (isWin !== null && gameType) {
@@ -208,31 +223,37 @@ module.exports = {
         return user.money;
     },
 
-    getDetailedProfile: (userId) => {
+    getDetailedProfile: (guildId, userId) => {
         const data = getData();
-        const sortedUsers = Object.entries(data.users)
+        const guildUsers = data.users?.[guildId] || {};
+        
+        const sortedUsers = Object.entries(guildUsers)
             .map(([id, info]) => ({ id, money: info.money || 0 }))
             .sort((a, b) => b.money - a.money);
+            
         const rankIndex = sortedUsers.findIndex(u => u.id === userId);
         const currentRank = rankIndex !== -1 ? rankIndex + 1 : sortedUsers.length + 1;
-        if (!data.users[userId]) data.users[userId] = createDefaultUser();
-        return { userStats: data.users[userId], rank: currentRank };
+        
+        const userStats = ensureUserExists(data, guildId, userId);
+        return { userStats, rank: currentRank };
     },
 
-    getTop10: () => {
+    getTop10: (guildId) => {
         const data = getData();
-        return Object.entries(data.users)
+        const guildUsers = data.users?.[guildId] || {};
+        
+        return Object.entries(guildUsers)
             .map(([id, info]) => ({ id, money: info.money || 0 }))
             .sort((a, b) => b.money - a.money)
             .slice(0, 10);
     },
 
-    doDaily: (userId) => {
+    doDaily: (guildId, userId) => {
         const data = getData();
-        if (!data.users[userId]) data.users[userId] = createDefaultUser();
+        const user = ensureUserExists(data, guildId, userId);
         
         const currentVNString = getVNStringDate();
-        const lastDailyDateStr = data.users[userId].lastDaily ? new Date(data.users[userId].lastDaily + (3600000 * 7)).toDateString() : "";
+        const lastDailyDateStr = user.lastDaily ? new Date(user.lastDaily + (3600000 * 7)).toDateString() : "";
         
         if (currentVNString === lastDailyDateStr) {
             const timeLeft = getMsUntilVNTomorrow();
@@ -242,17 +263,16 @@ module.exports = {
         }
         
         const gift = 50000; 
-        data.users[userId].money = (data.users[userId].money || 0) + gift;
-        data.users[userId].lastDaily = Date.now();
+        user.money = (user.money || 0) + gift;
+        user.lastDaily = Date.now();
         saveData(data);
-        return { success: true, money: data.users[userId].money, gift };
+        return { success: true, money: user.money, gift };
     },
 
-    doXinTien: (userId) => {
+    doXinTien: (guildId, userId) => {
         const data = getData();
-        if (!data.users[userId]) data.users[userId] = createDefaultUser();
+        const user = ensureUserExists(data, guildId, userId);
         
-        const user = data.users[userId];
         const currentVNString = getVNStringDate();
         const lastXinDateStr = user.lastXinTien ? new Date(user.lastXinTien + (3600000 * 7)).toDateString() : "";
 
@@ -296,13 +316,13 @@ module.exports = {
         saveData(data);
     },
 
-    redeemGiftcode: (userId, codeName) => {
+    redeemGiftcode: (guildId, userId, codeName) => {
         const data = getData();
         if (!data.giftcodes || !data.giftcodes[codeName]) return { success: false, msg: '❌ Mã quà tặng không tồn tại!' };
         const code = data.giftcodes[codeName];
         
         const currentVNString = getVNStringDate();
-        const userClaimIndex = code.usedUsers.findIndex(record => record.userId === userId);
+        const userClaimIndex = code.usedUsers.findIndex(record => record.userId === userId && record.guildId === guildId);
 
         if (userClaimIndex !== -1) {
             const lastClaimedDateStr = new Date(code.usedUsers[userClaimIndex].claimedAt + (3600000 * 7)).toDateString();
@@ -322,24 +342,37 @@ module.exports = {
         if (userClaimIndex !== -1) {
             code.usedUsers[userClaimIndex].claimedAt = Date.now();
         } else {
-            code.usedUsers.push({ userId, claimedAt: Date.now() });
+            // Lưu thêm guildId vào lịch sử sử dụng code của hệ thống giftcode
+            code.usedUsers.push({ guildId, userId, claimedAt: Date.now() });
         }
 
-        if (!data.users[userId]) data.users[userId] = createDefaultUser();
-        data.users[userId].money = (data.users[userId].money || 0) + code.money;
+        const user = ensureUserExists(data, guildId, userId);
+        user.money = (user.money || 0) + code.money;
         saveData(data);
-        return { success: true, money: code.money, total: data.users[userId].money };
+        return { success: true, money: code.money, total: user.money };
     },
 
-    getAllUsers: () => getData().users || {},
-    resetUserMoney: (userId) => {
+    getAllUsers: (guildId) => {
         const data = getData();
-        if (data.users[userId]) { data.users[userId].money = 50000; saveData(data); }
+        return data.users?.[guildId] || {};
+    },
+    
+    resetUserMoney: (guildId, userId) => {
+        const data = getData();
+        if (data.users?.[guildId]?.[userId]) { 
+            data.users[guildId][userId].money = 50000; 
+            saveData(data); 
+        }
         return 50000;
     },
-    resetAllMoney: () => {
+    
+    resetAllMoney: (guildId) => {
         const data = getData();
-        for (const id in data.users) { data.users[id].money = 50000; }
-        saveData(data);
+        if (data.users?.[guildId]) {
+            for (const id in data.users[guildId]) { 
+                data.users[guildId][id].money = 50000; 
+            }
+            saveData(data);
+        }
     }
 };

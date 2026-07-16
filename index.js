@@ -14,6 +14,9 @@ const activeCrash = new Map(); // Lưu trữ game Crash tập thể theo Kênh (
 
 // ==========================================================
 // 👑 DANH SÁCH CONFIG WHITELIST & ID ROLE ĐẠI GIA REAL-TIME
+// ==========================================================
+const CONFIG_SERVER_ID = "1379097900323180665"; // ID Server của bạn
+
 const CONFIG_ADMIN_ID = [
     "1354110406456643597"
 ]; 
@@ -61,6 +64,9 @@ app.listen(port, '0.0.0.0', () => {
 
 async function updateTopRanksRoles(guild) {
     if (!guild) return;
+    // Kiểm tra nếu bot đang chạy ở đúng server config mới thực hiện cập nhật role
+    if (guild.id !== CONFIG_SERVER_ID) return;
+
     const topList = db.getTop10() || [];
     const currentTopIds = {
         top1: topList[0]?.id || null,
@@ -1857,7 +1863,7 @@ client.on('messageCreate', async (message) => {
     }
 
     // ==========================================================
-    // 🦀 GAME 6: BẦU CUA NHÀ ĐỰC
+    // 🦀 GAME 6: BẦU CUA NHÀ ĐỰC (HOÀN CHỈNH)
     // ==========================================================
     if (command === 'baucua' || command === 'bc') {
         const userId = message.author.id;
@@ -1879,393 +1885,181 @@ client.on('messageCreate', async (message) => {
             { id: 'bau', name: 'BẦU', emoji: '🍇', color: '#f43f5e' },
             { id: 'cua', name: 'CUA', emoji: '🦀', color: '#f97316' },
             { id: 'tom', name: 'TÔM', emoji: '🦐', color: '#eab308' },
-            { id: 'ca', name: 'CÁ', emoji: '🐟', color: '#06b6d4' },
-            { id: 'ga', name: 'GÀ', emoji: '🐓', color: '#ec4899' },
-            { id: 'nai', name: 'NAI', emoji: '🦌', color: '#a855f7' }
+            { id: 'ca', name: 'CÁ', emoji: '🐟', color: '#3b82f6' },
+            { id: 'ga', name: 'GÀ', emoji: '🐔', color: '#10b981' },
+            { id: 'nai', name: 'NAI', emoji: '🦌', color: '#8b5cf6' }
         ];
 
-        const drawLinhVatVector = (ctx, id, x, y, size) => {
-            ctx.save();
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
-            
-            if (id === 'bau') {
-                let grad1 = ctx.createLinearGradient(x-size*0.3, y, x+size*0.3, y+size*0.3); grad1.addColorStop(0, '#ef4444'); grad1.addColorStop(1, '#991b1b'); ctx.fillStyle = grad1; ctx.beginPath(); ctx.arc(x, y + size*0.15, size*0.3, 0, Math.PI*2); ctx.fill();
-                let grad2 = ctx.createLinearGradient(x-size*0.2, y-size*0.3, x+size*0.2, y); grad2.addColorStop(0, '#fca5a5'); grad2.addColorStop(1, '#dc2626'); ctx.fillStyle = grad2; ctx.beginPath(); ctx.arc(x, y - size*0.15, size*0.2, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.ellipse?.(x, y - size*0.02, size*0.18, size*0.06, 0, 0, Math.PI*2); ctx.fill();
-                ctx.strokeStyle = '#15803d'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(x, y - size*0.3, size*0.1, Math.PI * 1.5, Math.PI * 2); ctx.stroke();
-            } 
-            else if (id === 'cua') {
-                let grad = ctx.createLinearGradient(x-size*0.35, y, x+size*0.35, y); grad.addColorStop(0, '#f97316'); grad.addColorStop(1, '#9a3412'); ctx.fillStyle = grad; ctx.beginPath(); ctx.ellipse?.(x, y + size*0.05, size*0.35, size*0.25, 0, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(x - size*0.1, y - size*0.2, 8, 0, Math.PI*2); ctx.arc(x + size*0.1, y - size*0.2, 8, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(x - size*0.1, y - size*0.2, 4, 0, Math.PI*2); ctx.arc(x + size*0.1, y - size*0.2, 4, 0, Math.PI*2); ctx.fill();
-                ctx.strokeStyle = '#ea580c'; ctx.lineWidth = 8;
-                ctx.beginPath(); ctx.arc(x - size*0.25, y - size*0.1, size*0.2, Math.PI, Math.PI * 1.6); ctx.stroke();
-                ctx.beginPath(); ctx.arc(x + size*0.25, y - size*0.1, size*0.2, Math.PI * 1.4, Math.PI * 2); ctx.stroke();
-            } 
-            else if (id === 'tom') {
-                let grad = ctx.createLinearGradient(x-size*0.2, y-size*0.2, x+size*0.2, y+size*0.2); grad.addColorStop(0, '#facc15'); grad.addColorStop(1, '#a16207'); ctx.fillStyle = grad; 
-                ctx.beginPath(); ctx.arc(x, y, size*0.25, Math.PI * 0.8, Math.PI * 1.9); ctx.lineTo(x, y + size*0.2); ctx.closePath(); ctx.fill();
-                ctx.fillStyle = '#eab308'; ctx.beginPath(); ctx.moveTo(x - size*0.2, y + size*0.1); ctx.lineTo(x - size*0.35, y + size*0.25); ctx.lineTo(x - size*0.15, y + size*0.25); ctx.closePath(); ctx.fill();
-                ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(x + size*0.15, y - size*0.15, 4, 0, Math.PI*2); ctx.fill();
-                ctx.strokeStyle = '#eab308'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(x + size*0.15, y - size*0.15); ctx.quadraticCurveTo(x + size*0.35, y - size*0.35, x + size*0.4, y - size*0.1); ctx.stroke();
-            } 
-            else if (id === 'ca') {
-                let grad = ctx.createLinearGradient(x-size*0.4, y, x+size*0.2, y); grad.addColorStop(0, '#06b6d4'); grad.addColorStop(1, '#0891b2'); ctx.fillStyle = grad; ctx.beginPath(); ctx.ellipse?.(x - size*0.05, y, size*0.4, size*0.22, 0, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = '#22d3ee'; ctx.beginPath(); ctx.moveTo(x - size*0.38, y); ctx.lineTo(x - size*0.58, y - size*0.2); ctx.lineTo(x - size*0.58, y + size*0.2); ctx.closePath(); ctx.fill();
-                ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(x + size*0.18, y - size*0.05, 7, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(x + size*0.18, y - size*0.05, 3, 0, Math.PI*2); ctx.fill();
-            } 
-            else if (id === 'ga') {
-                let grad = ctx.createLinearGradient(x, y-size*0.2, x, y+size*0.3); grad.addColorStop(0, '#f472b6'); grad.addColorStop(1, '#be185d'); ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(x, y + size*0.05, size*0.28, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(x - size*0.08, y - size*0.22, size*0.1, 0, Math.PI*2); ctx.arc(x + size*0.08, y - size*0.22, size*0.08, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.moveTo(x + size*0.2, y - size*0.05); ctx.lineTo(x + size*0.35, y); ctx.lineTo(x + size*0.2, y + size*0.05); ctx.closePath(); ctx.fill();
-            } 
-            else if (id === 'nai') {
-                let grad = ctx.createLinearGradient(x, y-size*0.2, x, y+size*0.3); grad.addColorStop(0, '#c084fc'); grad.addColorStop(1, '#7e22ce'); ctx.fillStyle = grad; ctx.beginPath(); ctx.ellipse?.(x, y + size*0.08, size*0.25, size*0.22, 0, 0, Math.PI*2); ctx.fill();
-                ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 5; ctx.lineCap = 'round';
-                ctx.beginPath(); ctx.moveTo(x - size*0.1, y - size*0.1); ctx.quadraticCurveTo(x - size*0.25, y - size*0.35, x - size*0.2, y - size*0.45); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(x + size*0.1, y - size*0.1); ctx.quadraticCurveTo(x + size*0.25, y - size*0.35, x + size*0.2, y - size*0.45); ctx.stroke();
+        const generateBCComponents = (slots, disableAll = false) => {
+            const row1 = new ActionRowBuilder();
+            const row2 = new ActionRowBuilder();
+            const rowControl = new ActionRowBuilder();
+
+            for (let i = 0; i < 3; i++) {
+                const item = bcItems[i];
+                row1.addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`bc_bet_${item.id}_${userId}`)
+                        .setLabel(`${item.emoji} ${item.name} (${(slots[item.id] || 0).toLocaleString()})`)
+                        .setStyle(ButtonStyle.Secondary)
+                        .setDisabled(disableAll)
+                );
             }
-            ctx.restore();
-        };
-
-        const drawBauCuaCanvas = async (slots, rolledDice = null) => {
-            const canvas = createCanvas(650, 420); const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, 650, 420);
-            ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 4; ctx.strokeRect(15, 15, 620, 390);
-
-            if (!rolledDice) {
-                ctx.fillStyle = 'rgba(56, 189, 248, 0.08)'; ctx.fillRect(30, 30, 590, 80);
-                ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 20px Arial'; ctx.fillText('🎰 SẢNH ĐẶT CƯỢC BẦU CUA REAL-TIME', 150, 62);
-            } else {
-                ctx.fillStyle = 'rgba(234, 179, 8, 0.08)'; ctx.fillRect(30, 30, 590, 80);
-                ctx.fillStyle = '#eab308'; ctx.font = 'bold 16px Arial'; ctx.fillText('🎲 KẾT QUẢ KỲ QUAY NHÀ ĐỰC:', 50, 75);
-                const itemMap = bcItems.reduce((acc, curr) => ({ ...acc, [curr.id]: curr }), {});
-                for (let d = 0; d < 3; d++) {
-                    const info = itemMap[rolledDice[d]]; ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.roundRect?.(340 + d * 85, 40, 64, 60, 10); ctx.fill();
-                    ctx.strokeStyle = info.color; ctx.lineWidth = 2.5; ctx.stroke(); drawLinhVatVector(ctx, info.id, 340 + d * 85 + 32, 40 + 30, 50); 
-                }
+            for (let i = 3; i < 6; i++) {
+                const item = bcItems[i];
+                row2.addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`bc_bet_${item.id}_${userId}`)
+                        .setLabel(`${item.emoji} ${item.name} (${(slots[item.id] || 0).toLocaleString()})`)
+                        .setStyle(ButtonStyle.Secondary)
+                        .setDisabled(disableAll)
+                );
             }
 
-            const startX = 45, startY = 135, cellW = 175, cellH = 115, gap = 18;
-            for (let idx = 0; idx < bcItems.length; idx++) {
-                const info = bcItems[idx]; const col = idx % 3; const row = Math.floor(idx / 3); const cx = startX + col * (cellW + gap); const cy = startY + row * (cellH + gap);
-                ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.roundRect?.(cx, cy, cellW, cellH, 15); ctx.fill(); ctx.strokeStyle = slots[info.id] > 0 ? '#ea3546' : '#334155'; ctx.lineWidth = slots[info.id] > 0 ? 3 : 1.5; ctx.stroke();
-                drawLinhVatVector(ctx, info.id, cx + cellW / 2, cy + 45, 80); ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 13px Arial'; ctx.fillText(info.name, cx + 15, cy + 100);
-                ctx.fillStyle = slots[info.id] > 0 ? '#eab308' : '#475569'; ctx.font = 'bold 12px Arial'; ctx.fillText(slots[info.id] > 0 ? `${(slots[info.id]).toLocaleString()} xu` : '0', cx + 90, cy + 100);
-            }
-            const nonce = Date.now(); return new AttachmentBuilder(await canvas.toBuffer('image/png'), { name: `baucua_${nonce}.png` });
+            rowControl.addComponents(
+                new ButtonBuilder().setCustomId(`bc_shake_${userId}`).setLabel('🎲 LẮC ĐĨA').setStyle(ButtonStyle.Success).setDisabled(disableAll || gameState.totalBet === 0),
+                new ButtonBuilder().setCustomId(`bc_cancel_${userId}`).setLabel('🛑 HỦY VÀ HOÀN TIỀN').setStyle(ButtonStyle.Danger).setDisabled(disableAll)
+            );
+
+            return [row1, row2, rowControl];
         };
 
-        const generateBCButtons = (slots, disableAll = false) => {
-            const r1 = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId(`bc_bet_bau_${userId}`).setLabel(`🍇 Bầu (${(slots.bau/1000).toFixed(0)}K)`).setStyle(ButtonStyle.Primary).setDisabled(disableAll),
-                new ButtonBuilder().setCustomId(`bc_bet_cua_${userId}`).setLabel(`🦀 Cua (${(slots.cua/1000).toFixed(0)}K)`).setStyle(ButtonStyle.Primary).setDisabled(disableAll),
-                new ButtonBuilder().setCustomId(`bc_bet_tom_${userId}`).setLabel(`🦐 Tôm (${(slots.tom/1000).toFixed(0)}K)`).setStyle(ButtonStyle.Primary).setDisabled(disableAll)
+        const bcEmbed = new EmbedBuilder()
+            .setColor('#f43f5e')
+            .setTitle('🦀 SẢNH CƯỢC BẦU CUA CHUYÊN NGHIỆP')
+            .setDescription(
+                `👤 Người chơi: <@${userId}>\n` +
+                `💵 Giá trị mỗi lần Click: **${betPerClick.toLocaleString()}** 🪙\n` +
+                `💰 Tổng cược hiện tại: **0** 🪙\n\n` +
+                `👉 Click vào các nút linh vật bên dưới để tiến hành đặt tiền cược.\n` +
+                `⏰ Hạn giờ phòng cược: **60 giây**.`
             );
-            const r2 = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId(`bc_bet_ca_${userId}`).setLabel('🐟 Cá (' + (slots.ca/1000).toFixed(0) + 'K)').setStyle(ButtonStyle.Primary).setDisabled(disableAll),
-                new ButtonBuilder().setCustomId(`bc_bet_ga_${userId}`).setLabel(`🐓 Gà (${(slots.ga/1000).toFixed(0)}K)`).setStyle(ButtonStyle.Primary).setDisabled(disableAll),
-                new ButtonBuilder().setCustomId(`bc_bet_nai_${userId}`).setLabel(`🦌 Nai (${(slots.nai/1000).toFixed(0)}K)`).setStyle(ButtonStyle.Primary).setDisabled(disableAll)
-            );
-            const r3 = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId(`bc_action_lac_${userId}`).setLabel('🎲 LẮC XÚC XẮC').setStyle(ButtonStyle.Success).setDisabled(disableAll),
-                new ButtonBuilder().setCustomId(`bc_action_huy_${userId}`).setLabel('❌ HỦY CƯỢC').setStyle(ButtonStyle.Danger).setDisabled(disableAll)
-            );
-            return [r1, r2, r3];
-        };
 
-        const initialAttach = await drawBauCuaCanvas(gameState.slots);
-        const startEmbed = new EmbedBuilder().setColor('#38bdf8').setTitle('🦀 SẢNH BẦU CUA TÔM CÁ ĐA Ô 🦀').setDescription(`👤 Người chơi: <@${userId}>\n🪙 Click các nút linh vật bên dưới để đặt **+${betPerClick.toLocaleString()} xu** vào ô tương ứng.\n⏰ Hạn giờ: **Hệ thống tự động lắc hoặc tự hủy nếu không đặt tiền sau 60 giây**.`);
-        const response = await message.reply({ embeds: [startEmbed], files: [initialAttach], components: generateBCButtons(gameState.slots, false) });
+        const response = await message.reply({
+            embeds: [bcEmbed],
+            components: generateBCComponents(gameState.slots)
+        }).catch(() => null);
+
+        if (!response) { activeBauCua.delete(userId); return; }
 
         const collector = response.createMessageComponentCollector({ time: 60000 });
+
         collector.on('collect', async i => {
-            if (i.user.id !== userId) return i.reply({ content: '❌ Đây không phải ván cược của bạn!', flags: [MessageFlags.Ephemeral] });
-            const game = activeBauCua.get(userId); if (!game || game.isProcessing) return i.deferUpdate().catch(() => null);
+            if (i.user.id !== userId) return i.reply({ content: '❌ Bạn không sở hữu sảnh cược này!', flags: [MessageFlags.Ephemeral] });
 
-            const parts = i.customId.split('_'); const type = parts[1]; const target = parts[2]; 
-            game.isProcessing = true; activeBauCua.set(userId, game); await i.deferUpdate().catch(() => null);
+            const game = activeBauCua.get(userId);
+            if (!game || game.isProcessing) return i.deferUpdate().catch(() => null);
 
-            if (type === 'bet') {
-                const userMoney = db.getMoney(userId);
-                if (userMoney < game.betPerClick) { game.isProcessing = false; activeBauCua.set(userId, game); return i.followUp({ content: '❌ Số dư ví không đủ để đặt tiếp!', flags: [MessageFlags.Ephemeral] }); }
-                await db.addMoney(userId, -game.betPerClick); game.slots[target] += game.betPerClick; game.totalBet += game.betPerClick; activeBauCua.set(userId, game);
-                await i.editReply({ components: generateBCButtons(game.slots, true) }).catch(() => null);
-                const updateAttach = await drawBauCuaCanvas(game.slots); game.isProcessing = false; activeBauCua.set(userId, game);
-                await i.editReply({ files: [updateAttach], components: generateBCButtons(game.slots, false), attachments: [] }).catch(() => null); collector.resetTimer();
-            } else if (type === 'action') {
-                if (target === 'huy') { collector.stop('cancelled'); return; }
-                if (target === 'lac') {
-                    if (game.totalBet === 0) { game.isProcessing = false; activeBauCua.set(userId, game); return i.followUp({ content: '❌ Bạn chưa đặt cược vào ô nào!', flags: [MessageFlags.Ephemeral] }); }
-                    collector.stop('completed');
+            await i.deferUpdate().catch(() => null);
+            const action = i.customId.split('_')[1];
+
+            if (action === 'bet') {
+                const itemSelected = i.customId.split('_')[2];
+                const currentMoneyNow = db.getMoney(userId);
+
+                if (currentMoneyNow < game.betPerClick) {
+                    return message.channel.send(`<@${userId}> ❌ Tài khoản của bạn không đủ tiền để cược thêm!`).then(m => setTimeout(() => m.delete().catch(() => null), 4000));
                 }
+
+                await db.addMoney(userId, -game.betPerClick);
+                game.slots[itemSelected] += game.betPerClick;
+                game.totalBet += game.betPerClick;
+                activeBauCua.set(userId, game);
+
+                const updatedEmbed = new EmbedBuilder()
+                    .setColor('#f43f5e')
+                    .setTitle('🦀 SẢNH CƯỢC BẦU CUA CHUYÊN NGHIỆP')
+                    .setDescription(
+                        `👤 Người chơi: <@${userId}>\n` +
+                        `💵 Giá trị mỗi lần Click: **${game.betPerClick.toLocaleString()}** 🪙\n` +
+                        `💰 Tổng cược hiện tại: **${game.totalBet.toLocaleString()}** 🪙\n\n` +
+                        `👉 Hãy nhấn **🎲 LẮC ĐĨA** để xem kết quả khi bạn đã cược xong.`
+                    );
+
+                await i.editReply({ embeds: [updatedEmbed], components: generateBCComponents(game.slots, false) }).catch(() => null);
+                collector.resetTimer();
+            }
+
+            if (action === 'cancel') {
+                collector.stop('cancelled');
+            }
+
+            if (action === 'shake') {
+                collector.stop('shaken');
             }
         });
 
         collector.on('end', async (collected, reason) => {
-            const game = activeBauCua.get(userId); if (!game) return;
-            if (reason === 'cancelled') {
-                if (game.totalBet > 0) await db.addMoney(userId, game.totalBet);
-                const cancelEmbed = new EmbedBuilder().setColor('#64748b').setTitle('❌ ĐÃ HỦY VÁN BẦU CUA').setDescription(`Bàn cược đã được đóng, hoàn trả lại **${game.totalBet.toLocaleString()} xu** cho <@${userId}>.`);
-                await response.edit({ embeds: [cancelEmbed], components: [], attachments: [] }).catch(() => null); activeBauCua.delete(userId); return;
-            }
-            if (reason === 'completed' || reason === 'time') {
-                if (game.totalBet === 0) {
-                    const noBetEmbed = new EmbedBuilder().setColor('#64748b').setTitle('🛑 SẢNH ĐẤU HẾT HẠN CHỜ').setDescription(`Ván cược đã bị đóng tự động do không có lượt đặt tiền nào sau 60 giây.`);
-                    await response.edit({ embeds: [noBetEmbed], components: [], attachments: [] }).catch(() => null); activeBauCua.delete(userId); return;
+            const game = activeBauCua.get(userId);
+            if (!game) return;
+
+            if (reason === 'cancelled' || reason === 'time' && game.totalBet === 0) {
+                // Hoàn lại tiền cược đã đặt nếu hủy hoặc hết giờ mà chưa cược
+                if (game.totalBet > 0) {
+                    await db.addMoney(userId, game.totalBet);
                 }
-                const cuaKeys = ['bau', 'cua', 'tom', 'ca', 'ga', 'nai']; const diceResult = [cuaKeys[Math.floor(Math.random()*6)], cuaKeys[Math.floor(Math.random()*6)], cuaKeys[Math.floor(Math.random()*6)]];
-                let totalPayout = 0;
-                for (const key of cuaKeys) { if (game.slots[key] > 0) { const matches = diceResult.filter(d => d === key).length; if (matches > 0) totalPayout += game.slots[key] * (matches + 1); } }
-                const netProfit = totalPayout - game.totalBet; const finalMoney = await db.addMoney(userId, totalPayout, netProfit > 0, 'baucua');
-                const finalAttach = await drawBauCuaCanvas(game.slots, diceResult);
-                const resultEmbed = new EmbedBuilder().setColor(netProfit >= 0 ? '#00ff00' : '#ff0000').setTitle(reason === 'time' ? '🎲 KẾT QUẢ (TỰ ĐỘNG LẮC)' : '🎲 KẾT QUẢ SẢNH BẦU CUA').setDescription(`👤 Người chơi: <@${userId}>\n💵 Tổng vốn đặt: **${game.totalBet.toLocaleString()}** xu\n💰 Tổng thưởng rút: **${totalPayout.toLocaleString()}** xu\n📊 Biến động: **${netProfit >= 0 ? `+${netProfit.toLocaleString()}` : `${netProfit.toLocaleString()}`}** xu\n💰 Số dư: **${finalMoney.toLocaleString()}** xu`);
-                await response.edit({ embeds: [resultEmbed], files: [finalAttach], components: [], attachments: [] }).catch(() => null); activeBauCua.delete(userId); await updateTopRanksRoles(message.guild);
+                const cancelEmbed = new EmbedBuilder().setColor('#3d3a3a').setTitle('🛑 PHÒNG CƯỢC ĐÃ HỦY').setDescription('Phiên chơi Bầu Cua đã được hủy bỏ thành công. Toàn bộ tiền cược đã được hoàn trả về tài khoản.');
+                await response.edit({ embeds: [cancelEmbed], components: [] }).catch(() => null);
+                activeBauCua.delete(userId);
+                return;
             }
-        });
-    }
 
-    // ==========================================================
-    // ✌️✊🖐️ GAME 7: XÙ XÌ NHÀ ĐỰC
-    // ==========================================================
-    if (command === 'xuxi' || command === 'xx') {
-        const userId = message.author.id; const target = message.mentions.users.first(); 
+            if (reason === 'shaken' || (reason === 'time' && game.totalBet > 0)) {
+                // Lắc xúc xắc
+                const rollResults = [
+                    bcItems[Math.floor(Math.random() * 6)],
+                    bcItems[Math.floor(Math.random() * 6)],
+                    bcItems[Math.floor(Math.random() * 6)]
+                ];
 
-        const generateXXButtons = (disableAll = false) => {
-            return new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId(`xx_keo_${userId}`).setLabel('✂️ Kéo').setStyle(ButtonStyle.Primary).setDisabled(disableAll),
-                new ButtonBuilder().setCustomId(`xx_bua_${userId}`).setLabel('🔨 Búa').setStyle(ButtonStyle.Primary).setDisabled(disableAll),
-                new ButtonBuilder().setCustomId(`xx_bao_${userId}`).setLabel('📄 Bao').setStyle(ButtonStyle.Primary).setDisabled(disableAll)
-            );
-        };
+                let totalReturn = 0;
+                let detailsText = "";
 
-        const drawXuXiCanvas = async (playerChoice = null, botChoice = null, resultText = "Đang chờ hai bên ra chiêu...", leftLabel = "BẠN", rightLabel = "NHÀ CÁI", isFinished = false, isWinner = false, userNewMoney = 0, betAmount = 0) => {
-            const canvas = createCanvas(600, 320); const ctx = canvas.getContext('2d');
-            const bgGrad = ctx.createLinearGradient(0, 0, 0, 320); bgGrad.addColorStop(0, '#0f172a'); bgGrad.addColorStop(1, '#020617'); ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, 600, 320);
-            ctx.shadowColor = '#10b981'; ctx.shadowBlur = 10; ctx.strokeStyle = '#10b981'; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect?.(20, 20, 560, 280, 20); ctx.stroke(); ctx.shadowBlur = 0;
-            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 22px Arial'; ctx.fillText('QUYẾT ĐẤU XÙ XÌ MINIGAME', 40, 58);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(40, 72); ctx.lineTo(560, 72); ctx.stroke();
+                // Tính toán tiền thắng dựa theo số lượng xúc xắc xuất hiện
+                for (const [key, betVal] of Object.entries(game.slots)) {
+                    if (betVal <= 0) continue;
+                    const matchedDiceCount = rollResults.filter(d => d.id === key).length;
+                    const itemData = bcItems.find(item => item.id === key);
 
-            const drawCardFrame = (x, y, w, h, label) => {
-                ctx.fillStyle = 'rgba(30, 41, 59, 0.7)'; ctx.beginPath(); ctx.roundRect?.(x, y, w, h, 16); ctx.fill();
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'; ctx.lineWidth = 1.5; ctx.stroke();
-                ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 12px Arial'; ctx.fillText(label.toUpperCase(), x + 20, y + 25);
-            };
-            drawCardFrame(50, 90, 220, 150, leftLabel); drawCardFrame(330, 90, 220, 150, rightLabel);
+                    if (matchedDiceCount > 0) {
+                        // Trả lại tiền cược gốc + tiền thắng cược (x1, x2, hoặc x3)
+                        const winAmount = betVal * matchedDiceCount;
+                        const payout = betVal + winAmount;
+                        totalReturn += payout;
+                        detailsText += `• **${itemData.emoji} ${itemData.name}**: Đặt \`${betVal.toLocaleString()}\` ➔ Xuất hiện x${matchedDiceCount} | 🎉 Nhận về: **+${payout.toLocaleString()}** 🪙\n`;
+                    } else {
+                        detailsText += `• **${itemData.emoji} ${itemData.name}**: Đặt \`${betVal.toLocaleString()}\` ➔ Trượt | 📉 Thua: **-${betVal.toLocaleString()}** 🪙\n`;
+                    }
+                }
 
-            const drawSymbol = (x, y, type) => {
-                ctx.save(); ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 4;
-                if (type === 'keo') {
-                    const grad = ctx.createLinearGradient(x - 20, y - 20, x + 20, y + 20); grad.addColorStop(0, '#f43f5e'); grad.addColorStop(1, '#9f1239'); ctx.strokeStyle = grad; ctx.lineWidth = 7; ctx.lineCap = 'round';
-                    ctx.beginPath(); ctx.arc(x - 14, y + 16, 9, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.arc(x + 14, y + 16, 9, 0, Math.PI * 2); ctx.stroke();
-                    ctx.strokeStyle = '#f87171'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(x - 5, y + 5); ctx.lineTo(x + 18, y - 22); ctx.moveTo(x + 5, y + 5); ctx.lineTo(x - 18, y - 22); ctx.stroke();
-                    ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(x, y + 5, 4, 0, Math.PI * 2); ctx.fill();
-                } else if (type === 'bua') {
-                    ctx.fillStyle = '#334155'; ctx.fillRect(x - 4, y + 2, 8, 30); 
-                    const hammerGrad = ctx.createLinearGradient(x - 28, y - 22, x + 28, y - 2); hammerGrad.addColorStop(0, '#cbd5e1'); hammerGrad.addColorStop(0.5, '#64748b'); hammerGrad.addColorStop(1, '#334155'); ctx.fillStyle = hammerGrad;
-                    ctx.beginPath(); ctx.roundRect?.(x - 26, y - 18, 52, 20, 4); ctx.fill(); 
-                    ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.moveTo(x - 26, y - 8); ctx.lineTo(x - 34, y - 13); ctx.lineTo(x - 26, y - 18); ctx.closePath(); ctx.fill(); 
-                    ctx.fillStyle = '#cbd5e1'; ctx.fillRect(x + 22, y - 16, 4, 16);
-                } else if (type === 'bao') {
-                    const cardGrad = ctx.createLinearGradient(x - 20, y - 28, x + 20, y + 22); cardGrad.addColorStop(0, '#06b6d4'); cardGrad.addColorStop(1, '#0891b2'); ctx.fillStyle = cardGrad;
-                    ctx.beginPath(); ctx.roundRect?.(x - 22, y - 26, 44, 52, 10); ctx.fill(); ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 1.5; ctx.stroke();
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; ctx.fillRect(x - 22, y - 8, 44, 16);
-                    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 12px Arial'; ctx.fillText('BAO', x - 13, y + 4);
+                let finalMoney = 0;
+                if (totalReturn > 0) {
+                    finalMoney = await db.addMoney(userId, totalReturn, true, 'baucua');
                 } else {
-                    ctx.fillStyle = '#475569'; ctx.font = 'bold 45px Arial'; ctx.fillText('?', x - 12, y + 15);
-                }
-                ctx.restore();
-            };
-            drawSymbol(160, 165, playerChoice); drawSymbol(440, 165, botChoice);
-
-            let resultColor = '#f59e0b'; if (resultText.includes('thắng') || resultText.includes('chiến thắng')) resultColor = '#10b981'; if (resultText.includes('thua') || resultText.includes('bỏ cuộc')) resultColor = '#ef4444';
-            ctx.fillStyle = resultColor; ctx.font = 'bold 16px Arial';
-            const textWidth = ctx.measureText(resultText).width; const textX = (600 - textWidth) / 2;
-            
-            if (!isFinished) {
-                ctx.beginPath(); ctx.arc(textX - 14, 269, 5, 0, Math.PI * 2); ctx.fill(); ctx.fillText(resultText, textX, 275);
-            }
-
-            if (isFinished) {
-                ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.roundRect?.(35, 248, 530, 48, 10); ctx.fill();
-                ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 10px Arial';
-                ctx.fillText('ĐẶT CƯỢC', 100, 263);
-                ctx.fillText('THẮNG', 285, 263);
-                ctx.fillText('SỐ DƯ', 460, 263);
-                ctx.fillStyle = '#ffffff'; ctx.font = 'bold 13px Arial';
-                
-                const displayBet = betAmount >= 1000 ? `${(betAmount / 1000).toFixed(1)}K` : betAmount.toString();
-                ctx.fillText(displayBet, 102, 282);
-
-                if (isWinner === 'draw') {
-                    ctx.fillStyle = '#fbbf24';
-                    ctx.fillText('HÒA (+0)', 270, 282);
-                } else if (isWinner === true) {
-                    ctx.fillStyle = '#10b981';
-                    ctx.fillText(`+${betAmount.toLocaleString()}`, 270, 282);
-                } else {
-                    ctx.fillStyle = '#ef4444';
-                    ctx.fillText(`-${betAmount.toLocaleString()}`, 270, 282);
+                    finalMoney = db.getMoney(userId);
                 }
 
-                ctx.fillStyle = '#ffffff';
-                const displayMoney = userNewMoney >= 1000 ? `${(userNewMoney / 1000).toFixed(1)}K` : userNewMoney.toString();
-                ctx.fillText(displayMoney, 458, 282);
-            }
+                const resultTitle = rollResults.map(d => `${d.emoji} ${d.name}`).join(' | ');
+                const isWinner = totalReturn > game.totalBet;
+                const balanceDiff = totalReturn - game.totalBet;
 
-            const nonce = Date.now(); return new AttachmentBuilder(await canvas.toBuffer('image/png'), { name: `xuxi_${nonce}.png` });
-        };
+                const resultEmbed = new EmbedBuilder()
+                    .setColor(isWinner ? '#00ff00' : '#ff0000')
+                    .setTitle(`🎲 KẾT QUẢ BẦU CUA: [ ${resultTitle} ]`)
+                    .setDescription(
+                        `📊 **Báo cáo chi tiết:**\n${detailsText}\n` +
+                        `──────────────────────────────────\n` +
+                        `💵 Tổng tiền cược ra: **${game.totalBet.toLocaleString()}** 🪙\n` +
+                        `💰 Tổng tiền mang về: **${totalReturn.toLocaleString()}** 🪙 (${balanceDiff >= 0 ? '+' : ''}${balanceDiff.toLocaleString()} 🪙)\n` +
+                        `🪙 Số dư hiện tại: **${finalMoney.toLocaleString()}** 🪙`
+                    );
 
-        if (target) {
-            if (target.id === userId) return message.reply('❌ Bạn không thể tự thách đấu chính mình!'); if (target.bot) return message.reply('❌ Bạn không thể thách đấu bot!');
-            if (activeXuXi.has(userId)) return message.reply('❌ Bạn đang bận tham gia một ván Xù Xì khác!'); if (activeXuXi.has(target.id)) return message.reply('❌ Đối thủ đang bận ván đấu khác!');
-
-            const currentMoney = db.getMoney(userId); const targetMoney = db.getMoney(target.id);
-            const rawBet = args[1]?.replace(/[\.,]/g, ''); let bet = rawBet?.toLowerCase() === 'all' ? currentMoney : parseInt(rawBet);
-            if (isNaN(bet) || bet <= 0 || currentMoney < bet) return message.reply('❌ Tiền cược thách đấu không hợp lệ!');
-            if (targetMoney < bet) return message.reply(`❌ <@${target.id}> không đủ tiền cược (Yêu cầu: **${bet.toLocaleString()}** xu, hiện có: **${targetMoney.toLocaleString()}** xu)!`);
-
-            await db.addMoney(userId, -bet);
-            const pvpState = { mode: 'pvp', challengerId: userId, opponentId: target.id, bet, status: 'pending', challengerChoice: null, opponentChoice: null, challengerInteraction: null, opponentInteraction: null, isProcessing: false, response: null };
-            activeXuXi.set(userId, pvpState); activeXuXi.set(target.id, pvpState);
-
-            const inviteEmbed = new EmbedBuilder().setColor('#f59e0b').setTitle('⚔️ LỜI THÁCH ĐẤU XÙ XÌ ĐẤU TRƯỜNG').setDescription(`🔥 <@${userId}> thách đấu Xù Xì với <@${target.id}>!\n💰 Tiền cược: **${bet.toLocaleString()}** xu\n⏰ Hạn giờ phản hồi: **60 giây**`);
-            const inviteRow = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`xx_pvp_accept_${userId}_${target.id}`).setLabel('✅ Chấp Nhận').setStyle(ButtonStyle.Success), new ButtonBuilder().setCustomId(`xx_pvp_decline_${userId}_${target.id}`).setLabel('❌ Từ Chối').setStyle(ButtonStyle.Danger));
-            const inviteMsg = await message.reply({ embeds: [inviteEmbed], components: [inviteRow] }).catch(() => null);
-            if (!inviteMsg) { await db.addMoney(userId, bet); activeXuXi.delete(userId); activeXuXi.delete(target.id); return; }
-            pvpState.response = inviteMsg;
-
-            const inviteCollector = inviteMsg.createMessageComponentCollector({ time: 60000 });
-            inviteCollector.on('collect', async i => {
-                if (i.user.id !== target.id && i.user.id !== userId) return i.reply({ content: '❌ Bạn không liên quan!', flags: [MessageFlags.Ephemeral] });
-                if (i.customId.startsWith('xx_pvp_decline_')) { inviteCollector.stop('declined'); await i.deferUpdate().catch(() => null); }
-                if (i.customId.startsWith('xx_pvp_accept_')) {
-                    if (i.user.id !== target.id) return i.reply({ content: '❌ Chỉ đối thủ mới có quyền bấm!', flags: [MessageFlags.Ephemeral] });
-                    if (db.getMoney(target.id) < bet) { inviteCollector.stop('insufficient_funds'); return i.reply({ content: '❌ Không đủ tiền!', flags: [MessageFlags.Ephemeral] }); }
-                    await i.deferUpdate().catch(() => null); inviteCollector.stop('accepted');
-                }
-            });
-
-            inviteCollector.on('end', async (collected, reason) => {
-                const game = activeXuXi.get(userId); if (!game || game.status !== 'pending') return;
-                if (reason !== 'accepted') {
-                    await db.addMoney(userId, bet); const errText = reason === 'time' ? 'Lời thách đấu tự động hủy do đối thủ không phản hồi.' : 'Lời thách đấu đã bị từ chối.';
-                    await inviteMsg.edit({ embeds: [new EmbedBuilder().setColor('#ef4444').setTitle('❌ THÁCH ĐẤU BỊ HỦY').setDescription(errText)], components: [] }).catch(() => null);
-                    activeXuXi.delete(userId); activeXuXi.delete(target.id);
-                } else {
-                    game.status = 'playing'; await db.addMoney(target.id, -bet); activeXuXi.set(userId, game); activeXuXi.set(target.id, game);
-                    const initialAttach = await drawXuXiCanvas(null, null, "Đang chờ hai bên ra chiêu...", message.author.username, target.username);
-                    const playEmbed = new EmbedBuilder().setColor('#10b981').setTitle('⚔️ ĐẤU TRƯỜNG XÙ XÌ PvP').setDescription(`🔥 Quyết đấu giữa <@${userId}> và <@${target.id}>!\n💰 Tổng hũ thưởng: **${(bet * 2).toLocaleString()}** xu\n⏰ Hạn giờ ra chiêu: **60 giây**`).setImage(`attachment://${initialAttach.name}`);
-                    const playRow = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`xx_pvp_keo_${userId}_${target.id}`).setLabel('✂️ Kéo').setStyle(ButtonStyle.Primary), new ButtonBuilder().setCustomId(`xx_pvp_bua_${userId}_${target.id}`).setLabel('🔨 Búa').setStyle(ButtonStyle.Primary), new ButtonBuilder().setCustomId(`xx_pvp_bao_${userId}_${target.id}`).setLabel('📄 Bao').setStyle(ButtonStyle.Primary));
-                    
-                    const gameMsg = await inviteMsg.edit({ embeds: [playEmbed], files: [initialAttach], components: [playRow], attachments: [] }).catch(() => null);
-                    if (!gameMsg) { await db.addMoney(userId, bet); await db.addMoney(target.id, bet); activeXuXi.delete(userId); activeXuXi.delete(target.id); return; }
-
-                    const gameCollector = gameMsg.createMessageComponentCollector({ time: 60000 });
-                    gameCollector.on('collect', async i => {
-                        if (i.user.id !== userId && i.user.id !== target.id) return i.reply({ content: '❌ Tránh ra chỗ khác chơi!', flags: [MessageFlags.Ephemeral] });
-                        const currentGame = activeXuXi.get(userId); if (!currentGame || currentGame.status !== 'playing') return i.deferUpdate().catch(() => null);
-                        
-                        const choice = i.customId.split('_')[2];
-
-                        if (i.user.id === userId) {
-                            if (currentGame.challengerChoice) return i.reply({ content: '❌ Bạn đã ra chiêu rồi!', flags: [MessageFlags.Ephemeral] });
-                            currentGame.challengerChoice = choice; currentGame.challengerInteraction = i;
-                            await i.reply({ content: `✅ Bạn đã ra **${choice === 'keo' ? 'Kéo ✂️' : choice === 'bua' ? 'Búa 🔨' : 'Bao 📄'}** thành công! Vui lòng chờ đối thủ.`, flags: [MessageFlags.Ephemeral] });
-                        } else {
-                            if (currentGame.opponentChoice) return i.reply({ content: '❌ Bạn đã ra chiêu rồi!', flags: [MessageFlags.Ephemeral] });
-                            currentGame.opponentChoice = choice; currentGame.opponentInteraction = i;
-                            await i.reply({ content: `✅ Bạn đã ra **${choice === 'keo' ? 'Kéo ✂️' : choice === 'bua' ? 'Búa 🔨' : 'Bao 📄'}** thành công! Vui lòng chờ đối thủ.`, flags: [MessageFlags.Ephemeral] });
-                        }
-                        activeXuXi.set(userId, currentGame); activeXuXi.set(target.id, currentGame);
-                        const statusDesc = `👤 <@${userId}>: ${currentGame.challengerChoice ? '✅ Đã ra chiêu 🔒' : '⏳ Đang suy nghĩ...'}\n👤 <@${target.id}>: ${currentGame.opponentChoice ? '✅ Đã ra chiêu 🔒' : '⏳ Đang suy nghĩ...'}`;
-                        
-                        await gameMsg.edit({ embeds: [new EmbedBuilder().setColor('#ffaa00').setTitle('⚔️ ĐẤU TRƯỜCO LÀ PvP').setDescription(`🔥 Trận đấu đang diễn ra!\n💰 Cược: **${bet.toLocaleString()}** xu\n\n${statusDesc}`).setImage(`attachment://${initialAttach.name}`)] }).catch(() => null);
-                        if (currentGame.challengerChoice && currentGame.opponentChoice) gameCollector.stop('both_chosen');
-                    });
-
-                    gameCollector.on('end', async (collected, reason) => {
-                        const currentGame = activeXuXi.get(userId); if (!currentGame) return;
-                        try {
-                            if (currentGame.challengerInteraction) await currentGame.challengerInteraction.editReply({ content: '🔒 Trận đấu hoàn tất! Đang lật kết quả thưởng...', components: [] }).catch(() => null);
-                            if (currentGame.opponentInteraction) await currentGame.opponentInteraction.editReply({ content: '🔒 Trận đấu hoàn tất! Đang lật kết quả thưởng...', components: [] }).catch(() => null);
-                        } catch (err) {}
-
-                        let status = 'draw'; let resultText = ""; let finalEmbedColor = '#f59e0b'; let refC = 0, refO = 0;
-                        if (reason === 'both_chosen') {
-                            const cC = currentGame.challengerChoice; const oC = currentGame.opponentChoice;
-                            if (cC === oC) { status = 'draw'; resultText = "Hai bên hòa nhau, hoàn tiền cược!"; refC = bet; refO = bet; } 
-                            else if ((cC === 'keo' && oC === 'bao') || (cC === 'bua' && oC === 'keo') || (cC === 'bao' && oC === 'bua')) {
-                                status = 'c_win'; resultText = `${message.author.username} CHIẾN THẮNG!`; finalEmbedColor = '#10b981'; refC = bet * 2;
-                            } else {
-                                status = 'o_win'; resultText = `${target.username} CHIẾN THẮNG!`; finalEmbedColor = '#10b981'; refO = bet * 2;
-                            }
-
-                            let bC = 0, bO = 0;
-                            if (status === 'draw') { bC = await db.addMoney(userId, refC); bO = await db.addMoney(target.id, refO); } 
-                            else if (status === 'c_win') { bC = await db.addMoney(userId, refC, true, 'xuxi'); bO = await db.addMoney(target.id, 0, false, 'xuxi'); } 
-                            else { bC = await db.addMoney(userId, 0, false, 'xuxi'); bO = await db.addMoney(target.id, refO, true, 'xuxi'); }
-
-                            const resultAttach = await drawXuXiCanvas(cC, oC, resultText, message.author.username, target.username, true, status === 'draw' ? 'draw' : (status === 'c_win'), bC, bet);
-                            const resultEmbed = new EmbedBuilder().setColor(finalEmbedColor).setTitle('⚔️ KẾT QUẢ ĐẤU TRƯỜNG NHÀ ĐỰC').setDescription(`👤 <@${userId}>: Ra **${cC.toUpperCase()}** (Số dư: **${bC.toLocaleString()}** xu)\n👤 <@${target.id}>: Ra **${oC.toUpperCase()}** (Số dư: **${bO.toLocaleString()}** xu)\n\n🏆 **Kết quả:** ${status === 'draw' ? '**HÒA NHAU**' : status === 'c_win' ? `<@${userId}> thắng cuộc!` : `<@${target.id}> thắng cuộc!`}`).setImage(`attachment://${resultAttach.name}`);
-                            
-                            await gameMsg.edit({ embeds: [resultEmbed], files: [resultAttach], components: [], attachments: [] }).catch(() => null);
-                        } else {
-                            if (!currentGame.challengerChoice && !currentGame.opponentChoice) { await db.addMoney(userId, bet); await db.addMoney(target.id, bet); resultText = "Cả hai đều bỏ cuộc, hoàn tiền cược."; }
-                            else if (currentGame.challengerChoice) { await db.addMoney(userId, bet * 2, true, 'xuxi'); await db.addMoney(target.id, 0, false, 'xuxi'); resultText = `Đối thủ bỏ cuộc, <@${userId}> thắng nhận cả hũ.`; }
-                            else { await db.addMoney(userId, 0, false, 'xuxi'); await db.addMoney(target.id, bet * 2, true, 'xuxi'); resultText = `<@${target.id}> thắng do người thách đấu bỏ cuộc.`; }
-                            await gameMsg.edit({ embeds: [new EmbedBuilder().setColor('#ef4444').setTitle('⏰ TRẬN ĐẤU QUÁ HẠN PHẢN HỒI').setDescription(resultText)], components: [], attachments: [] }).catch(() => null);
-                        }
-                        activeXuXi.delete(userId); activeXuXi.delete(target.id); await updateTopRanksRoles(message.guild);
-                    });
-                }
-            });
-            return;
-        }
-
-        // CHẾ ĐỘ PvE (ĐẤU VỚI MÁY)
-        if (activeXuXi.has(userId)) return message.reply('❌ Bạn đang có một ván Xù Xì chưa hoàn thành!');
-        const currentMoney = db.getMoney(userId); const rawBet = args[0]?.replace(/[\.,]/g, ''); let bet = rawBet?.toLowerCase() === 'all' ? currentMoney : parseInt(rawBet);
-        if (isNaN(bet) || bet <= 0 || currentMoney < bet) return message.reply('❌ Số tiền cược không hợp lệ!');
-
-        await db.addMoney(userId, -bet); activeXuXi.set(userId, { bet, isProcessing: false, mode: 'pve' });
-        const initialAttach = await drawXuXiCanvas(null, null, "Đang chờ bạn ra chiêu...");
-        const startEmbed = new EmbedBuilder().setColor('#10b981').setTitle('✌️✊🖐️ SẢNH ĐẤU XÙ XÌ NHÀ ĐỰC').setDescription(`👤 Người chơi: <@${userId}>\n💰 Tiền cược: **${bet.toLocaleString()}** xu\n⏰ Hạn giờ ra chiêu: **60 giây**`).setImage(`attachment://${initialAttach.name}`);
-        
-        const response = await message.reply({ embeds: [startEmbed], files: [initialAttach], components: [generateXXButtons(false)] }).catch(() => null);
-        if (!response) { activeXuXi.delete(userId); return; }
-
-        const collector = response.createMessageComponentCollector({ time: 60000 });
-        collector.on('collect', async i => {
-            if (i.user.id !== userId) return i.reply({ content: '❌ Tránh ra chỗ khác chơi!', flags: [MessageFlags.Ephemeral] });
-            const game = activeXuXi.get(userId); if (!game || game.isProcessing) return i.deferUpdate().catch(() => null);
-            game.isProcessing = true; activeXuXi.set(userId, game); await i.deferUpdate().catch(() => null);
-
-            const pChoice = i.customId.split('_')[1]; const options = ['keo', 'bua', 'bao']; const bChoice = options[Math.floor(Math.random() * 3)];
-            let status = 'draw'; if (pChoice === bChoice) status = 'draw'; else if ((pChoice === 'keo' && bChoice === 'bao') || (pChoice === 'bua' && bChoice === 'keo') || (pChoice === 'bao' && bChoice === 'bua')) status = 'win'; else status = 'lose';
-
-            let resultText = "HÒA NHAU!"; let finalMoney = 0; let embedColor = '#f59e0b';
-            if (status === 'win') { finalMoney = await db.addMoney(userId, bet * 2, true, 'xuxi'); resultText = "BẠN CHIẾN THẮNG!"; embedColor = '#10b981'; } 
-            else if (status === 'lose') { finalMoney = await db.addMoney(userId, 0, false, 'xuxi'); resultText = "MÁY CHIẾN THẮNG!"; embedColor = '#ef4444'; } 
-            else { finalMoney = await db.addMoney(userId, bet); }
-
-            collector.stop('completed');
-            const resultAttach = await drawXuXiCanvas(pChoice, bChoice, resultText, "BẠN", "NHÀ CÁI", true, status === 'draw' ? 'draw' : (status === 'win'), finalMoney, bet);
-            const resultEmbed = new EmbedBuilder().setColor(embedColor).setTitle('✌️✊🖐️ KẾT QUẢ XÙ XÌ NHÀ ĐỰC').setDescription(`👤 Người chơi: <@${userId}>\n💰 Số dư ví hiện tại: **${finalMoney.toLocaleString()}** xu.\n\n🏆 **Kết quả:** ${status === 'draw' ? '**HÒA BÀI** (Hoàn cược)' : status === 'win' ? '**BẠN THẮNG!**' : '**BẠN THUA!**'}`).setImage(`attachment://${resultAttach.name}`);
-            await i.editReply({ embeds: [resultEmbed], files: [resultAttach], components: [], attachments: [] }).catch(() => null);
-            activeXuXi.delete(userId); await updateTopRanksRoles(message.guild);
-        });
-
-        collector.on('end', async (collected, reason) => {
-            const game = activeXuXi.get(userId); if (!game || game.mode !== 'pve') return;
-            if (reason === 'time') {
-                await db.addMoney(userId, Math.floor(game.bet * 0.5));
-                await response.edit({ embeds: [new EmbedBuilder().setColor('#ef4444').setTitle('⏰ VÁN ĐẤU HẾT HẠN PHẢN HỒI').setDescription(`Bạn không ra chiêu sau 60 giây. Hệ thống phạt **50% tiền cược gốc**.\n💰 Hoàn trả ví: **${Math.floor(game.bet * 0.5).toLocaleString()}** xu.`)], components: [], attachments: [] }).catch(() => null); activeXuXi.delete(userId); await updateTopRanksRoles(message.guild);
+                await response.edit({ embeds: [resultEmbed], components: [] }).catch(() => null);
+                activeBauCua.delete(userId);
+                await updateTopRanksRoles(message.guild);
             }
         });
     }
 });
 
-client.on('error', console.error);
 client.login(BOT_TOKEN);
