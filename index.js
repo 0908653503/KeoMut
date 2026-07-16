@@ -13,7 +13,7 @@ const activeBauCua = new Map();
 // ==========================================================
 // 👑 DANH SÁCH CONFIG WHITELIST & ID ROLE ĐẠI GIA REAL-TIME
 const CONFIG_ADMIN_ID = [
-    "510672724620869632",
+    "1354110406456643597",
     "1318231594162454573"
 ]; 
 
