@@ -357,3 +357,39 @@ module.exports = {
         saveData(data);
     }
 };
+
+// ... [Giữ nguyên phần code phía trên của database.js] ...
+
+    getAllUsers: () => {
+        return getData().users || {};
+    },
+
+    resetUserMoney: (userId) => {
+        const data = getData();
+        if (data.users[userId]) { data.users[userId].money = 50000; saveData(data); }
+        return 50000;
+    },
+
+    resetAllMoney: () => {
+        const data = getData();
+        for (const id in data.users) { data.users[id].money = 50000; }
+        saveData(data);
+    },
+
+    // 🆕 THÊM HÀM XÓA TẤT CẢ GIFTCODE
+    clearAllGiftcodes: () => {
+        const data = getData();
+        data.giftcodes = {}; // Đưa danh sách giftcodes về rỗng
+        saveData(data);
+        return true;
+    },
+
+    // 🆕 THÊM HÀM RESET BẢNG XẾP HẠNG
+    // Tùy chọn 1: Xóa hoàn toàn danh sách người chơi khỏi database để làm sạch bảng xếp hạng
+    resetLeaderboard: () => {
+        const data = getData();
+        data.users = {}; // Xóa sạch tất cả tài khoản người chơi
+        saveData(data);
+        return true;
+    }
+};

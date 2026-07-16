@@ -1574,4 +1574,47 @@ client.on('messageCreate', async (message) => {
     }
 });
 
+const db = require('./database.js'); // Đường dẫn tới file database.js của bạn
+
+// Giả định bạn có cấu trúc kiểm tra lệnh từ tin nhắn (ví dụ: message.content)
+const args = message.content.trim().split(/ +/);
+const command = args[0].toLowerCase();
+
+// ID của Admin (Thay thế bằng ID tài khoản của bạn để bảo mật)
+const ADMIN_ID = "1354110406456643597"; 
+
+switch (command) {
+    case '-xoacode': {
+        // Kiểm tra quyền Admin (Xóa dòng này nếu bạn muốn ai cũng dùng được)
+        if (message.author.id !== ADMIN_ID) {
+            return message.reply("❌ Bạn không có quyền sử dụng lệnh này!");
+        }
+
+        try {
+            db.clearAllGiftcodes();
+            message.reply("✅ Đã xóa toàn bộ mã GIFTCODE thành công trên hệ thống và đồng bộ GitHub!");
+        } catch (error) {
+            console.error(error);
+            message.reply("🚨 Đã xảy ra lỗi khi xóa GIFTCODE.");
+        }
+        break;
+    }
+
+    case '-resetxephang': {
+        // Kiểm tra quyền Admin (Xóa dòng này nếu bạn muốn ai cũng dùng được)
+        if (message.author.id !== ADMIN_ID) {
+            return message.reply("❌ Bạn không có quyền sử dụng lệnh này!");
+        }
+
+        try {
+            db.resetLeaderboard();
+            message.reply("✅ Đã reset toàn bộ bảng xếp hạng (làm sạch dữ liệu ví người chơi) thành công!");
+        } catch (error) {
+            console.error(error);
+            message.reply("🚨 Đã xảy ra lỗi khi reset bảng xếp hạng.");
+        }
+        break;
+    }
+}
+
 client.login(BOT_TOKEN);
