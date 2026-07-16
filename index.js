@@ -106,7 +106,7 @@ client.once('ready', () => {
 // ==========================================================
 async function drawRocketCanvas(currentMultiplier, isCrashed = false) {
     const canvas = createCanvas(600, 350);
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d');0908653503/KeoMut
 
     // 1. Phông nền Không gian chuyển sắc Gradient sâu thẳm
     const bgGrad = ctx.createLinearGradient(0, 0, 0, 350);
@@ -555,7 +555,7 @@ client.on('messageCreate', async (message) => {
             const rawData = fs.readFileSync('./data.json', 'utf8');
             const parsedData = JSON.parse(rawData);
             const GITHUB_TOKEN = process.env.GITHUB_TOKEN; 
-            const GITHUB_REPO = "emsgachacity/nhaduc"; 
+            const GITHUB_REPO = "0908653503/KeoMut"; 
             const GITHUB_FILE_PATH = "data.json"; 
             if (!GITHUB_TOKEN) return backupMsg.edit('❌ Không tìm thấy GITHUB_TOKEN.');
 
