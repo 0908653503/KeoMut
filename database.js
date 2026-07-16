@@ -3,9 +3,9 @@ const fsPromises = require('fs').promises;
 const path = './data.json';
 
 // =========================================================================
-// ⚙️ CẤU HÌNH ĐỒNG BỘ GITHUB API (Đã ẩn token cứng để bảo mật)
+// ⚙️ CẤU HÌNH ĐỒNG BỘ GITHUB API
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN; 
-const GITHUB_REPO = "0908653503/KeoMut"; 
+const GITHUB_REPO = "emsgachacity/nhaduc"; 
 const GITHUB_FILE_PATH = "data.json"; 
 // =========================================================================
 
@@ -135,7 +135,6 @@ async function processLocalSave() {
     }
 }
 
-// Hàm cập nhật mới: Tự động gọi đồng bộ GitHub sau khi lưu local thành công
 function saveData(data) { 
     memoryCache = data; 
     needsGitHubSync = true;
@@ -144,7 +143,6 @@ function saveData(data) {
     }); 
 }
 
-// Hàm khởi tạo dữ liệu mẫu tránh trùng lặp code
 function createDefaultUser() {
     return { 
         money: 0, 
@@ -152,37 +150,51 @@ function createDefaultUser() {
         maxWinBet: 0,
         streak: 0, 
         maxStreak: 0,
-        lastXinTien: 0,     // Thời gian xin tiền gần nhất
-        xinTienCount: 0,    // Số lần xin tiền trong ngày
+        lastXinTien: 0,     
+        xinTienCount: 0,    
         taixiu: { total: 0, win: 0 },
         domin: { total: 0, win: 0 },
         blackjack: { total: 0, win: 0 },
         slots: { total: 0, win: 0 },
         caothap: { total: 0, win: 0 },    
-        baucua: { total: 0, win: 0 }
+        baucua: { total: 0, win: 0 },
+        xuxi: { total: 0, win: 0 },
+        crash: { total: 0, win: 0 }
     };
+}
+
+function getVNStringDate() {
+    const d = new Date();
+    const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    return new Date(utc + (3600000 * 7)).toDateString();
+}
+
+function getMsUntilVNTomorrow() {
+    const d = new Date();
+    const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    const vnTime = new Date(utc + (3600000 * 7));
+    
+    const vnTomorrow = new Date(vnTime);
+    vnTomorrow.setDate(vnTime.getDate() + 1);
+    vnTomorrow.setHours(0, 0, 0, 0);
+    
+    return vnTomorrow - vnTime;
 }
 
 module.exports = {
     getMoney: (userId) => getData().users[userId]?.money || 0,
-    
     hasUser: (userId) => !!getData().users[userId],
-
     getGiftcodes: () => getData().giftcodes || {},
 
     addMoney: (userId, amount, isWin = null, gameType = null) => {
         const data = getData();
-        if (!data.users[userId]) {
-            data.users[userId] = createDefaultUser();
-        }
-        
+        if (!data.users[userId]) data.users[userId] = createDefaultUser();
         const user = data.users[userId];
         user.money += amount;
 
         if (isWin !== null && gameType) {
             if (!user[gameType]) user[gameType] = { total: 0, win: 0 };
             user[gameType].total += 1;
-
             if (isWin === true) {
                 user[gameType].win += 1;
                 user.streak = (user.streak || 0) + 1;
@@ -192,7 +204,6 @@ module.exports = {
                 user.streak = 0; 
             }
         }
-
         saveData(data); 
         return user.money;
     },
@@ -202,14 +213,9 @@ module.exports = {
         const sortedUsers = Object.entries(data.users)
             .map(([id, info]) => ({ id, money: info.money || 0 }))
             .sort((a, b) => b.money - a.money);
-        
         const rankIndex = sortedUsers.findIndex(u => u.id === userId);
         const currentRank = rankIndex !== -1 ? rankIndex + 1 : sortedUsers.length + 1;
-
-        if (!data.users[userId]) {
-            data.users[userId] = createDefaultUser();
-        }
-
+        if (!data.users[userId]) data.users[userId] = createDefaultUser();
         return { userStats: data.users[userId], rank: currentRank };
     },
 
@@ -223,54 +229,45 @@ module.exports = {
 
     doDaily: (userId) => {
         const data = getData();
-        if (!data.users[userId]) {
-            data.users[userId] = createDefaultUser();
-        }
-        const now = Date.now();
-        const oneDay = 24 * 60 * 60 * 1000; 
+        if (!data.users[userId]) data.users[userId] = createDefaultUser();
         
-        if (now - data.users[userId].lastDaily < oneDay) {
-            const timeLeft = oneDay - (now - data.users[userId].lastDaily);
+        const currentVNString = getVNStringDate();
+        const lastDailyDateStr = data.users[userId].lastDaily ? new Date(data.users[userId].lastDaily + (3600000 * 7)).toDateString() : "";
+        
+        if (currentVNString === lastDailyDateStr) {
+            const timeLeft = getMsUntilVNTomorrow();
             const hours = Math.floor(timeLeft / (1000 * 60 * 60));
             const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-            return { success: false, msg: `⏰ Hãy quay lại sau **${hours} giờ ${minutes} phút**.` };
+            return { success: false, msg: `⏰ Bạn đã điểm danh hôm nay rồi! Vui lòng quay lại sau **${hours} giờ ${minutes} phút** (Hệ thống tự động gia hạn lúc 00:00 ngày mới).` };
         }
         
         const gift = 50000; 
         data.users[userId].money = (data.users[userId].money || 0) + gift;
-        data.users[userId].lastDaily = now;
+        data.users[userId].lastDaily = Date.now();
         saveData(data);
         return { success: true, money: data.users[userId].money, gift };
     },
 
     doXinTien: (userId) => {
         const data = getData();
-        if (!data.users[userId]) {
-            data.users[userId] = createDefaultUser();
-        }
+        if (!data.users[userId]) data.users[userId] = createDefaultUser();
         
         const user = data.users[userId];
-        const now = new Date();
-        const todayString = now.toDateString(); 
+        const currentVNString = getVNStringDate();
+        const lastXinDateStr = user.lastXinTien ? new Date(user.lastXinTien + (3600000 * 7)).toDateString() : "";
 
-        const lastXinDate = user.lastXinTien ? new Date(user.lastXinTien).toDateString() : "";
-
-        if (todayString !== lastXinDate) {
-            user.xinTienCount = 0;
+        if (currentVNString !== lastXinDateStr) {
+            user.xinTienCount = 0; 
         }
 
         if ((user.xinTienCount || 0) >= 10) {
-            const tomorrow = new Date();
-            tomorrow.setDate(now.getDate() + 1);
-            tomorrow.setHours(0, 0, 0, 0);
-            
-            const timeLeft = tomorrow - now;
+            const timeLeft = getMsUntilVNTomorrow();
             const hours = Math.floor(timeLeft / (1000 * 60 * 60));
             const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
 
             return { 
                 success: false, 
-                msg: `❌ Bạn đã dùng hết **10/10 lượt** xin tiền trợ cấp của ngày hôm nay!\n⏰ Vui lòng chờ **${hours} giờ ${minutes} phút** nữa để hệ thống reset lượt mới.` 
+                msg: `❌ Bạn đã dùng hết **10/10 lượt** xin trợ cấp của ngày hôm nay!\n⏰ Vui lòng chờ **${hours} giờ ${minutes} phút** nữa để hệ thống reset lúc 00:00 ngày mới.` 
             };
         }
 
@@ -291,10 +288,7 @@ module.exports = {
         saveData(data);
     },
 
-    getTaiXiuHistory: () => {
-        return getData().taixiuHistory || [];
-    },
-
+    getTaiXiuHistory: () => getData().taixiuHistory || [],
     createGiftcode: (codeName, money, maxUses) => {
         const data = getData();
         if (!data.giftcodes) data.giftcodes = {};
@@ -307,20 +301,18 @@ module.exports = {
         if (!data.giftcodes || !data.giftcodes[codeName]) return { success: false, msg: '❌ Mã quà tặng không tồn tại!' };
         const code = data.giftcodes[codeName];
         
-        const now = Date.now();
-        const oneDay = 24 * 60 * 60 * 1000;
-
+        const currentVNString = getVNStringDate();
         const userClaimIndex = code.usedUsers.findIndex(record => record.userId === userId);
 
         if (userClaimIndex !== -1) {
-            const lastClaimedAt = code.usedUsers[userClaimIndex].claimedAt;
-            if (now - lastClaimedAt < oneDay) {
-                const timeLeft = oneDay - (now - lastClaimedAt);
+            const lastClaimedDateStr = new Date(code.usedUsers[userClaimIndex].claimedAt + (3600000 * 7)).toDateString();
+            if (currentVNString === lastClaimedDateStr) {
+                const timeLeft = getMsUntilVNTomorrow();
                 const hours = Math.floor(timeLeft / (1000 * 60 * 60));
                 const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
                 return { 
                     success: false, 
-                    msg: `❌ Bạn đã nhận mã này rồi! Hãy quay lại sau **${hours} giờ ${minutes} phút** để nhập lại.` 
+                    msg: `❌ Bạn đã nhận mã này hôm nay rồi! Vui lòng chờ **${hours} giờ ${minutes} phút** để nhập lại vào ngày mai.` 
                 };
             }
         }
@@ -328,29 +320,23 @@ module.exports = {
         if (code.usedUsers.length >= code.maxUses) return { success: false, msg: '❌ Mã quà tặng đã hết lượt!' };
 
         if (userClaimIndex !== -1) {
-            code.usedUsers[userClaimIndex].claimedAt = now;
+            code.usedUsers[userClaimIndex].claimedAt = Date.now();
         } else {
-            code.usedUsers.push({ userId, claimedAt: now });
+            code.usedUsers.push({ userId, claimedAt: Date.now() });
         }
 
-        if (!data.users[userId]) {
-            data.users[userId] = createDefaultUser();
-        }
+        if (!data.users[userId]) data.users[userId] = createDefaultUser();
         data.users[userId].money = (data.users[userId].money || 0) + code.money;
         saveData(data);
         return { success: true, money: code.money, total: data.users[userId].money };
     },
 
-    getAllUsers: () => {
-        return getData().users || {};
-    },
-
+    getAllUsers: () => getData().users || {},
     resetUserMoney: (userId) => {
         const data = getData();
         if (data.users[userId]) { data.users[userId].money = 50000; saveData(data); }
         return 50000;
     },
-
     resetAllMoney: () => {
         const data = getData();
         for (const id in data.users) { data.users[id].money = 50000; }
