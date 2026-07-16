@@ -15,12 +15,12 @@ const activeCrash = new Map(); // Lưu trữ game Crash tập thể theo Kênh (
 // ==========================================================
 // 👑 DANH SÁCH CONFIG WHITELIST & ID ROLE ĐẠI GIA REAL-TIME
 const CONFIG_ADMIN_ID = [
-    "510672724620869632",
+    "1494388988272705686",
     "1318231594162454573"
 ]; 
 
 const CONFIG_ADMIN_ROLES = [
-    "1457040413020913685",
+    "1494388988272705686",
     "1457029879941042206"
 ];
 
