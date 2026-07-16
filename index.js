@@ -1574,7 +1574,7 @@ client.on('messageCreate', async (message) => {
     }
 });
 
-const db = require('./database.js'); // Đường dẫn tới file database.js của bạn
+const myDatabase = require('./database.js'); // Đường dẫn tới file database.js của bạn
 
 // Giả định bạn có cấu trúc kiểm tra lệnh từ tin nhắn (ví dụ: message.content)
 const args = message.content.trim().split(/ +/);
