@@ -145,7 +145,7 @@ function saveData(data) {
 
 function createDefaultUser() {
     return { 
-        money: 0, 
+        money: 50000, // ĐÃ SỬA: Thay đổi tiền khởi tạo tài khoản mới từ 0 lên 50,000đ
         lastDaily: 0, 
         maxWinBet: 0,
         streak: 0, 
@@ -182,7 +182,15 @@ function getMsUntilVNTomorrow() {
 }
 
 module.exports = {
-    getMoney: (userId) => getData().users[userId]?.money || 0,
+    getMoney: (userId) => {
+        const data = getData();
+        // ĐÃ SỬA: Nếu chưa tồn tại user thì tự động khởi tạo mặc định luôn để tránh trả về 0 sai sót
+        if (!data.users[userId]) {
+            data.users[userId] = createDefaultUser();
+            saveData(data);
+        }
+        return data.users[userId].money;
+    },
     hasUser: (userId) => !!getData().users[userId],
     getGiftcodes: () => getData().giftcodes || {},
 
@@ -334,12 +342,16 @@ module.exports = {
     getAllUsers: () => getData().users || {},
     resetUserMoney: (userId) => {
         const data = getData();
-        if (data.users[userId]) { data.users[userId].money = 0; saveData(data); }
-        return 0;
+        if (!data.users[userId]) data.users[userId] = createDefaultUser();
+        data.users[userId].money = 50000; // ĐÃ SỬA: Sét về đúng 50k thay vì 0
+        saveData(data);
+        return 50000;
     },
     resetAllMoney: () => {
         const data = getData();
-        for (const id in data.users) { data.users[id].money = 0; }
+        for (const id in data.users) { 
+            data.users[id].money = 50000; // ĐÃ SỬA: Sét về đúng 50k thay vì 0
+        }
         saveData(data);
     },
     // Hàm mới để xóa sạch dữ liệu người chơi trên bảng xếp hạng về 0đ

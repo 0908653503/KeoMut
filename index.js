@@ -346,7 +346,7 @@ client.on('messageCreate', async (message) => {
 
     if (command === 'tien') {
         const target = message.mentions.users.first() || message.author;
-        const money = db.getMoney(target.id) || 0;
+        const money = db.getMoney(target.id);
         return message.reply('💰 Số dư tài khoản của ' + (target.id === message.author.id ? 'bạn' : target.username) + ' là: **' + money.toLocaleString() + '** 🪙.');
     }
 
