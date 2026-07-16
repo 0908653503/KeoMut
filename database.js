@@ -334,12 +334,18 @@ module.exports = {
     getAllUsers: () => getData().users || {},
     resetUserMoney: (userId) => {
         const data = getData();
-        if (data.users[userId]) { data.users[userId].money = 50000; saveData(data); }
-        return 50000;
+        if (data.users[userId]) { data.users[userId].money = 0; saveData(data); }
+        return 0;
     },
     resetAllMoney: () => {
         const data = getData();
-        for (const id in data.users) { data.users[id].money = 50000; }
+        for (const id in data.users) { data.users[id].money = 0; }
+        saveData(data);
+    },
+    // Hàm mới để xóa sạch dữ liệu người chơi trên bảng xếp hạng về 0đ
+    resetLeaderboard: () => {
+        const data = getData();
+        data.users = {}; // Xóa trắng toàn bộ người chơi
         saveData(data);
     }
 };
