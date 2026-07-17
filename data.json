@@ -206,13 +206,13 @@
       }
     },
     "911045173256003634": {
-      "money": 150000,
+      "money": 200000,
       "lastDaily": 0,
       "maxWinBet": 780000,
       "streak": 0,
       "maxStreak": 1,
-      "lastXinTien": 1784300179349,
-      "xinTienCount": 4,
+      "lastXinTien": 1784300227090,
+      "xinTienCount": 5,
       "taixiu": {
         "total": 0,
         "win": 0
@@ -247,7 +247,7 @@
       }
     },
     "884359312904945685": {
-      "money": 150000,
+      "money": 650000,
       "lastDaily": 0,
       "maxWinBet": 0,
       "streak": 0,
@@ -390,6 +390,10 @@
         {
           "userId": "911045173256003634",
           "claimedAt": 1784299600280
+        },
+        {
+          "userId": "884359312904945685",
+          "claimedAt": 1784300226685
         }
       ]
     },
