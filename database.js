@@ -5,7 +5,7 @@ const path = './data.json';
 // =========================================================================
 // ⚙️ CẤU HÌNH ĐỒNG BỘ GITHUB API
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN; 
-const GITHUB_REPO = "emsgachacity/nhaduc"; 
+const GITHUB_REPO = "0908653503/KeoMut"; 
 const GITHUB_FILE_PATH = "data.json"; 
 // =========================================================================
 
