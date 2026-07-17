@@ -691,7 +691,7 @@ client.on('messageCreate', async (message) => {
                 return;
             }
 
-            const gameCollector = gameMsg.createMessageComponentCollector({ time: 180000 });
+            const gameCollector = gameMsg.createMessageComponentCollector({ time: 30000 });
 
             gameCollector.on('collect', async i => {
                 const userId = i.user.id;
