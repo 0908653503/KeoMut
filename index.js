@@ -1694,7 +1694,7 @@ client.on('messageCreate', async (message) => {
         const userId = message.author.id;
         if (activeCaoThap.has(userId)) return message.reply('❌ Bạn đang có một ván Cao Thấp chưa nhận thưởng!');
 
-        const CONFIG_CT_WIN_RATE = 80; 
+        const CONFIG_CT_WIN_RATE = 95; 
 
         const currentMoney = db.getMoney(userId);
         const rawBet = args[0]?.replace(/[\.,]/g, '');
