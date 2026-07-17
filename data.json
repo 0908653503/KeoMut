@@ -83,7 +83,7 @@
       }
     },
     "480061855956598795": {
-      "money": 50000,
+      "money": 150000,
       "lastDaily": 0,
       "maxWinBet": 0,
       "streak": 0,
@@ -137,7 +137,12 @@
     "shasha": {
       "money": 100000,
       "maxUses": 50,
-      "usedUsers": []
+      "usedUsers": [
+        {
+          "userId": "480061855956598795",
+          "claimedAt": 1784298534785
+        }
+      ]
     },
     "messivodich": {
       "money": 500000,
