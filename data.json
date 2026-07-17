@@ -4,7 +4,7 @@
       "money": 0,
       "lastDaily": 1784299468192,
       "maxWinBet": 41038924,
-      "streak": 1,
+      "streak": 0,
       "maxStreak": 4,
       "lastXinTien": 0,
       "xinTienCount": 0,
@@ -37,7 +37,7 @@
         "win": 0
       },
       "crash": {
-        "total": 10,
+        "total": 11,
         "win": 5
       }
     },
@@ -160,7 +160,7 @@
         "win": 0
       },
       "crash": {
-        "total": 4,
+        "total": 5,
         "win": 1
       }
     },
@@ -201,18 +201,18 @@
         "win": 0
       },
       "crash": {
-        "total": 4,
+        "total": 5,
         "win": 1
       }
     },
     "911045173256003634": {
-      "money": 0,
+      "money": 50000,
       "lastDaily": 0,
       "maxWinBet": 780000,
       "streak": 0,
       "maxStreak": 1,
-      "lastXinTien": 1784299681439,
-      "xinTienCount": 3,
+      "lastXinTien": 1784300179349,
+      "xinTienCount": 4,
       "taixiu": {
         "total": 0,
         "win": 0
@@ -242,7 +242,7 @@
         "win": 0
       },
       "crash": {
-        "total": 4,
+        "total": 5,
         "win": 1
       }
     }
