@@ -83,10 +83,10 @@
       }
     },
     "480061855956598795": {
-      "money": 650000,
+      "money": 350000,
       "lastDaily": 0,
       "maxWinBet": 500000,
-      "streak": 1,
+      "streak": 0,
       "maxStreak": 2,
       "lastXinTien": 1784298678025,
       "xinTienCount": 3,
@@ -99,7 +99,7 @@
         "win": 0
       },
       "blackjack": {
-        "total": 1,
+        "total": 2,
         "win": 1
       },
       "slots": {
