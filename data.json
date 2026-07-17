@@ -45,7 +45,7 @@
       "money": 795000,
       "lastDaily": 0,
       "maxWinBet": 245000,
-      "streak": 1,
+      "streak": 0,
       "maxStreak": 3,
       "lastXinTien": 1784299670213,
       "xinTienCount": 2,
@@ -78,7 +78,7 @@
         "win": 0
       },
       "crash": {
-        "total": 7,
+        "total": 8,
         "win": 3
       }
     },
@@ -209,7 +209,7 @@
       "money": 380000,
       "lastDaily": 0,
       "maxWinBet": 780000,
-      "streak": 1,
+      "streak": 0,
       "maxStreak": 1,
       "lastXinTien": 1784299681439,
       "xinTienCount": 3,
@@ -242,7 +242,7 @@
         "win": 0
       },
       "crash": {
-        "total": 3,
+        "total": 4,
         "win": 1
       }
     }
