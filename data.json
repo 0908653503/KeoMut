@@ -58,6 +58,11 @@
       "money": 100000,
       "maxUses": 50,
       "usedUsers": []
+    },
+    "cr7ancuc": {
+      "money": 100000,
+      "maxUses": 50,
+      "usedUsers": []
     }
   }
 }
