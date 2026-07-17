@@ -45,7 +45,7 @@
       "money": 150000,
       "lastDaily": 0,
       "maxWinBet": 187000,
-      "streak": 1,
+      "streak": 0,
       "maxStreak": 3,
       "lastXinTien": 0,
       "xinTienCount": 0,
@@ -78,7 +78,7 @@
         "win": 0
       },
       "crash": {
-        "total": 3,
+        "total": 4,
         "win": 2
       }
     },
