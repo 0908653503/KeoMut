@@ -42,11 +42,11 @@
       }
     },
     "750012040432582776": {
-      "money": 0,
+      "money": 122500,
       "lastDaily": 0,
-      "maxWinBet": 0,
-      "streak": 0,
-      "maxStreak": 0,
+      "maxWinBet": 122500,
+      "streak": 1,
+      "maxStreak": 1,
       "lastXinTien": 0,
       "xinTienCount": 0,
       "taixiu": {
@@ -78,12 +78,12 @@
         "win": 0
       },
       "crash": {
-        "total": 0,
-        "win": 0
+        "total": 1,
+        "win": 1
       }
     },
     "480061855956598795": {
-      "money": 150000,
+      "money": 650000,
       "lastDaily": 0,
       "maxWinBet": 0,
       "streak": 0,
@@ -147,7 +147,12 @@
     "messivodich": {
       "money": 500000,
       "maxUses": 20,
-      "usedUsers": []
+      "usedUsers": [
+        {
+          "userId": "480061855956598795",
+          "claimedAt": 1784298546998
+        }
+      ]
     },
     "samancuc": {
       "money": 100000,
