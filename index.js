@@ -596,7 +596,7 @@ client.on('messageCreate', async (message) => {
         const lobbyEmbed = new EmbedBuilder()
             .setColor('#7289da')
             .setTitle('🚀 PHÒNG CHỜ TÀU VŨ TRỤ SIÊU TỐC 🚀')
-            .setDescription(`👤 Cơ trưởng: <@${message.author.id}>\n⏰ Cổng đăng ký vé bay đang mở trong **20 giây**!\n👉 Bấm các nút bên dưới để lên tàu cùng mọi người nào!`);
+            .setDescription(`👤 Cơ trưởng: <@${message.author.id}>\n⏰ Cổng đăng ký vé bay đang mở trong **15 giây**!\n👉 Bấm các nút bên dưới để lên tàu cùng mọi người nào!`);
 
         const lobbyButtons = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId(`crash_join_10k_${channelId}`).setLabel('Đặt 10K 🪙').setStyle(ButtonStyle.Primary),
