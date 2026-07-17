@@ -1,13 +1,13 @@
 {
   "users": {
     "1354110406456643597": {
-      "money": 150000,
+      "money": 200000,
       "lastDaily": 1784299468192,
       "maxWinBet": 41038924,
       "streak": 0,
       "maxStreak": 4,
-      "lastXinTien": 1784305501117,
-      "xinTienCount": 9,
+      "lastXinTien": 1784305505535,
+      "xinTienCount": 10,
       "taixiu": {
         "total": 1,
         "win": 0
@@ -83,7 +83,7 @@
       }
     },
     "480061855956598795": {
-      "money": 2210022,
+      "money": 2110022,
       "lastDaily": 0,
       "maxWinBet": 789000,
       "streak": 2,
