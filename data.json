@@ -42,7 +42,7 @@
       }
     },
     "750012040432582776": {
-      "money": 1100000,
+      "money": 1000000,
       "lastDaily": 0,
       "maxWinBet": 311000,
       "streak": 0,
@@ -58,7 +58,7 @@
         "win": 0
       },
       "blackjack": {
-        "total": 24,
+        "total": 25,
         "win": 14
       },
       "slots": {
