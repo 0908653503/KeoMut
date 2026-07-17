@@ -1,7 +1,7 @@
 {
   "users": {
     "1354110406456643597": {
-      "money": 9700000,
+      "money": 8700000,
       "lastDaily": 0,
       "maxWinBet": 0,
       "streak": 0,
@@ -9,7 +9,7 @@
       "lastXinTien": 0,
       "xinTienCount": 0,
       "taixiu": {
-        "total": 0,
+        "total": 1,
         "win": 0
       },
       "domin": {
@@ -42,7 +42,15 @@
       }
     }
   },
-  "taixiuHistory": [],
+  "taixiuHistory": [
+    {
+      "diceString": "⚁⚃⚁",
+      "total": 8,
+      "result": "XỈU",
+      "isWin": false,
+      "amountChange": "-1000.0K"
+    }
+  ],
   "giftcodes": {
     "shasha": {
       "money": 100000,
