@@ -42,11 +42,11 @@
       }
     },
     "750012040432582776": {
-      "money": 209500,
+      "money": 259500,
       "lastDaily": 0,
       "maxWinBet": 187000,
-      "streak": 2,
-      "maxStreak": 2,
+      "streak": 3,
+      "maxStreak": 3,
       "lastXinTien": 0,
       "xinTienCount": 0,
       "taixiu": {
@@ -58,8 +58,8 @@
         "win": 0
       },
       "blackjack": {
-        "total": 0,
-        "win": 0
+        "total": 1,
+        "win": 1
       },
       "slots": {
         "total": 0,
