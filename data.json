@@ -43,5 +43,11 @@
     }
   },
   "taixiuHistory": [],
-  "giftcodes": {}
+  "giftcodes": {
+    "shasha": {
+      "money": 100000,
+      "maxUses": 50,
+      "usedUsers": []
+    }
+  }
 }
