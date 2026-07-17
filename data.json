@@ -37,7 +37,7 @@
         "win": 0
       },
       "crash": {
-        "total": 8,
+        "total": 9,
         "win": 4
       }
     },
@@ -160,7 +160,7 @@
         "win": 0
       },
       "crash": {
-        "total": 1,
+        "total": 2,
         "win": 0
       }
     },
@@ -201,12 +201,12 @@
         "win": 0
       },
       "crash": {
-        "total": 1,
+        "total": 2,
         "win": 0
       }
     },
     "911045173256003634": {
-      "money": 400000,
+      "money": 0,
       "lastDaily": 0,
       "maxWinBet": 0,
       "streak": 0,
