@@ -596,7 +596,7 @@ client.on('messageCreate', async (message) => {
         const lobbyEmbed = new EmbedBuilder()
             .setColor('#7289da')
             .setTitle('🚀 PHÒNG CHỜ TÀU VŨ TRỤ SIÊU TỐC 🚀')
-            .setDescription(`👤 Cơ trưởng: <@${message.author.id}>\n⏰ Cổng đăng ký vé bay đang mở trong **30 giây**!\n👉 Bấm các nút bên dưới để lên tàu cùng mọi người nào!`);
+            .setDescription(`👤 Cơ trưởng: <@${message.author.id}>\n⏰ Cổng đăng ký vé bay đang mở trong **20 giây**!\n👉 Bấm các nút bên dưới để lên tàu cùng mọi người nào!`);
 
         const lobbyButtons = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId(`crash_join_10k_${channelId}`).setLabel('Đặt 10K 🪙').setStyle(ButtonStyle.Primary),
@@ -608,7 +608,7 @@ client.on('messageCreate', async (message) => {
         const response = await message.reply({ embeds: [lobbyEmbed], components: [lobbyButtons] }).catch(() => null);
         if (!response) { activeCrash.delete(channelId); return; }
 
-        const lobbyCollector = response.createMessageComponentCollector({ time: 30000 });
+        const lobbyCollector = response.createMessageComponentCollector({ time: 20000 });
 
         lobbyCollector.on('collect', async i => {
             const userId = i.user.id;
@@ -691,7 +691,7 @@ client.on('messageCreate', async (message) => {
                 return;
             }
 
-            const gameCollector = gameMsg.createMessageComponentCollector({ time: 30000 });
+            const gameCollector = gameMsg.createMessageComponentCollector({ time: 180000 });
 
             gameCollector.on('collect', async i => {
                 const userId = i.user.id;
