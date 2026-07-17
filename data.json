@@ -1,7 +1,7 @@
 {
   "users": {
     "1354110406456643597": {
-      "money": 100000,
+      "money": 50000,
       "lastDaily": 1784299468192,
       "maxWinBet": 41038924,
       "streak": 0,
@@ -86,7 +86,7 @@
       "money": 578357,
       "lastDaily": 0,
       "maxWinBet": 1078357,
-      "streak": 3,
+      "streak": 0,
       "maxStreak": 4,
       "lastXinTien": 1784299668345,
       "xinTienCount": 10,
@@ -119,7 +119,7 @@
         "win": 0
       },
       "crash": {
-        "total": 12,
+        "total": 13,
         "win": 6
       }
     },
