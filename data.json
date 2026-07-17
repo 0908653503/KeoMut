@@ -1,11 +1,11 @@
 {
   "users": {
     "1354110406456643597": {
-      "money": 700000,
+      "money": 936000,
       "lastDaily": 1784299468192,
       "maxWinBet": 41038924,
-      "streak": 3,
-      "maxStreak": 3,
+      "streak": 4,
+      "maxStreak": 4,
       "lastXinTien": 0,
       "xinTienCount": 0,
       "taixiu": {
@@ -37,8 +37,8 @@
         "win": 0
       },
       "crash": {
-        "total": 6,
-        "win": 3
+        "total": 7,
+        "win": 4
       }
     },
     "750012040432582776": {
@@ -124,7 +124,7 @@
       }
     },
     "1318231594162454573": {
-      "money": 200000,
+      "money": 300000,
       "lastDaily": 0,
       "maxWinBet": 0,
       "streak": 0,
@@ -246,6 +246,10 @@
         {
           "userId": "1354110406456643597",
           "claimedAt": 1784299483762
+        },
+        {
+          "userId": "1318231594162454573",
+          "claimedAt": 1784299512459
         }
       ]
     },
