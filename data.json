@@ -48,6 +48,11 @@
       "money": 100000,
       "maxUses": 50,
       "usedUsers": []
+    },
+    "messivodich": {
+      "money": 500000,
+      "maxUses": 20,
+      "usedUsers": []
     }
   }
 }
