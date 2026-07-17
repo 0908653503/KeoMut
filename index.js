@@ -12,6 +12,9 @@ const activeBauCua = new Map();
 const activeXuXi = new Map(); 
 const activeCrash = new Map(); // Lưu trữ game Crash tập thể theo Kênh (Channel ID)
 
+// Map lưu trữ thời gian cooldown nhận tiền cứu trợ khi tag bot (delay 3 phút)
+const tagBotCooldown = new Map();
+
 // ==========================================================
 // 👑 DANH SÁCH CONFIG WHITELIST & ID ROLE ĐẠI GIA REAL-TIME
 const CONFIG_ADMIN_ID = [
@@ -28,6 +31,13 @@ const CONFIG_TOP_ROLES = {
     top3: "1527672430787821668"
 };
 // ==========================================================
+
+// Thuật toán sinh điểm phát nổ (Crash Point) đưa lên đầu để tránh lỗi ReferenceError
+function generateCrashPoint() {
+    const rand = Math.random();
+    if (rand < 0.05) return 1.08 + parseFloat((Math.random() * 0.1).toFixed(2)); 
+    return parseFloat((1.08 / (1 - Math.random())).toFixed(2));
+}
 
 const client = new Client({
     intents: [
@@ -100,204 +110,237 @@ client.once('ready', () => {
 });
 
 // ==========================================================
-// 🎨 RENDER GIAO DIỆN CANAVAS GAME CRASH (TÀU VŨ TRỤ) SIÊU ĐẸP
+// 🎨 RENDER GIAO DIỆN CANAVAS GAME CRASH (CÓ ĐẦY ĐỦ TRỤC TỌA ĐỘ RÕ NÉT CỦA BẢN V2)
 // ==========================================================
 async function drawRocketCanvas(currentMultiplier, isCrashed = false) {
     const canvas = createCanvas(600, 350);
     const ctx = canvas.getContext('2d');
 
-    // 1. Phông nền Không gian chuyển sắc Gradient sâu thẳm
+    // 1. Phông nền Thiên hà chuyển sắc sâu (Deep Cosmic Space)
     const bgGrad = ctx.createLinearGradient(0, 0, 0, 350);
-    bgGrad.addColorStop(0, '#0d0c1d');
-    bgGrad.addColorStop(1, '#040308');
+    bgGrad.addColorStop(0, '#090514');
+    bgGrad.addColorStop(0.5, '#05030a');
+    bgGrad.addColorStop(1, '#020105');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, 600, 350);
 
-    // 2. Vẽ dải ngân hà phát sáng mờ ảo bằng Radial Gradient
-    const galaxyGrad = ctx.createRadialGradient(450, 100, 10, 450, 100, 150);
-    galaxyGrad.addColorStop(0, 'rgba(124, 58, 237, 0.25)'); // Tím Nebulae
-    galaxyGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = galaxyGrad;
-    ctx.beginPath();
-    ctx.arc(450, 100, 150, 0, Math.PI * 2);
-    ctx.fill();
+    // 2. Vẽ dải Ngân Hà phát sáng đa tầng (Multi-layered Nebula)
+    ctx.save();
+    const purpleNebula = ctx.createRadialGradient(420, 120, 5, 420, 120, 180);
+    purpleNebula.addColorStop(0, 'rgba(139, 92, 246, 0.25)'); 
+    purpleNebula.addColorStop(0.6, 'rgba(236, 72, 153, 0.05)'); 
+    purpleNebula.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = purpleNebula;
+    ctx.beginPath(); ctx.arc(420, 120, 180, 0, Math.PI * 2); ctx.fill();
 
-    // 3. Hiệu ứng hạt bụi sao lấp lánh (Golden Stars)
-    ctx.fillStyle = '#fde047';
-    for (let i = 0; i < 25; i++) {
-        let starX = (Math.sin(i * 98765) * 0.5 + 0.5) * 600;
-        let starY = (Math.cos(i * 56789) * 0.5 + 0.5) * 350;
-        let starSize = (i % 3 === 0) ? 2 : 1;
+    const cyanNebula = ctx.createRadialGradient(150, 180, 20, 150, 180, 140);
+    cyanNebula.addColorStop(0, 'rgba(6, 182, 212, 0.12)'); 
+    cyanNebula.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = cyanNebula;
+    ctx.beginPath(); ctx.arc(150, 180, 140, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // 3. Hiệu ứng bụi sao lấp lánh (Sci-Fi Cross Stars)
+    for (let i = 0; i < 30; i++) {
+        let starX = (Math.sin(i * 12345) * 0.5 + 0.5) * 600;
+        let starY = (Math.cos(i * 67890) * 0.5 + 0.5) * 350;
         ctx.save();
-        ctx.shadowColor = '#facc15';
-        ctx.shadowBlur = (i % 3 === 0) ? 5 : 0;
-        ctx.fillRect(starX, starY, starSize, starSize);
+        if (i % 6 === 0) {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(starX - 4, starY); ctx.lineTo(starX + 4, starY);
+            ctx.moveTo(starX, starY - 4); ctx.lineTo(starX, starY + 4);
+            ctx.stroke();
+        } else {
+            ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#a7f3d0';
+            ctx.fillRect(starX, starY, i % 3 === 0 ? 2 : 1, i % 3 === 0 ? 2 : 1);
+        }
         ctx.restore();
     }
 
-    // 4. Các đường quỹ đạo hành tinh mờ ảo chạy ngang
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-    ctx.lineWidth = 1;
-    for(let r = 1; r <= 3; r++) {
-        ctx.beginPath();
-        ctx.arc(300, 500, r * 150, Math.PI, Math.PI * 2);
-        ctx.stroke();
-    }
-
-    // Tọa độ điểm bắt đầu và điểm mút của quỹ đạo parabol
     const startX = 80, startY = 270;
-    const factor = Math.min(currentMultiplier, 8); // Tỷ lệ kéo dốc đồ thị
+    const factor = Math.min(currentMultiplier, 8); 
     const endX = startX + (factor - 1) * 55; 
     const endY = startY - (factor - 1) * 26;
 
+    // 4. TRỤC TỌA ĐỘ VÀ ĐƯỜNG LƯỚI KHUNG BIỂU ĐỒ RÕ NÉT
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; 
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    // Vẽ Trục Hoành
+    ctx.moveTo(startX - 15, startY); ctx.lineTo(550, startY);
+    // Vẽ Trục Tung
+    ctx.moveTo(startX, startY + 15); ctx.lineTo(startX, 40);
+    ctx.stroke();
+
+    // Các đường vạch lưới phụ dạng nét đứt
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]); 
+    for (let h = 1; h <= 4; h++) {
+        let gridY = startY - h * 50;
+        ctx.beginPath(); ctx.moveTo(startX, gridY); ctx.lineTo(540, gridY); ctx.stroke();
+    }
+    ctx.restore();
+
     if (!isCrashed) {
-        // 5. Vẽ đường cong Neon chuyển màu tuyệt đẹp
+        // 5. Đường chạy Parabol Laser rực rỡ
         ctx.save();
-        const curveGrad = ctx.createLinearGradient(startX, startY, endX, endY);
-        curveGrad.addColorStop(0, '#39ff14'); // Xanh lục Neon
-        curveGrad.addColorStop(1, '#00f2fe'); // Xanh Neon
-        ctx.strokeStyle = curveGrad;
-        ctx.shadowColor = '#00f2fe';
-        ctx.shadowBlur = 20;
-        ctx.lineWidth = 5;
+        const laserGrad = ctx.createLinearGradient(startX, startY, endX, endY);
+        laserGrad.addColorStop(0, '#10b981'); 
+        laserGrad.addColorStop(0.5, '#06b6d4'); 
+        laserGrad.addColorStop(1, '#67e8f9'); 
+        ctx.strokeStyle = laserGrad;
+        ctx.shadowColor = '#06b6d4';
+        ctx.shadowBlur = 15;
+        ctx.lineWidth = 5.5;
+        ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(startX, startY);
-        ctx.quadraticCurveTo((startX + endX) / 2, startY, endX, endY);
+        ctx.quadraticCurveTo((startX + endX) / 1.8, startY + 5, endX, endY);
         ctx.stroke();
         ctx.restore();
 
-        // 6. Vẽ Tàu Vũ Trụ (Rocket Vector) cực ngầu ngay đầu đường cong
+        // 6. Thiết kế Tàu Vũ Trụ Alpha Mech bóng bẩy
         ctx.save();
-        // Tính toán góc nghiêng của tàu vũ trụ để bám sát độ dốc đường parabol
-        const angle = Math.atan2(endY - startY, endX - startX) * 0.5; // Góc nghiêng giảm nhẹ để tàu nhìn cân đối
+        const angle = Math.atan2(endY - startY, endX - startX) * 0.45; 
         ctx.translate(endX, endY);
         ctx.rotate(angle);
 
-        // Vẽ lửa phản lực phía đuôi tàu vũ trụ
-        const flameGrad = ctx.createLinearGradient(-30, 0, -10, 0);
-        flameGrad.addColorStop(0, 'rgba(239, 68, 68, 0)');
-        flameGrad.addColorStop(0.5, '#ef4444');
-        flameGrad.addColorStop(1, '#f97316');
-        ctx.fillStyle = flameGrad;
+        // Đuôi lửa phản lực Plasma nhiều lớp
+        ctx.save();
+        ctx.shadowColor = '#f97316'; ctx.shadowBlur = 15;
+        const fireGrad = ctx.createLinearGradient(-35, 0, -10, 0);
+        fireGrad.addColorStop(0, 'rgba(239, 68, 68, 0)');
+        fireGrad.addColorStop(0.4, '#ef4444'); 
+        fireGrad.addColorStop(0.8, '#f97316'); 
+        fireGrad.addColorStop(1, '#ffffff'); 
+        ctx.fillStyle = fireGrad;
         ctx.beginPath();
-        ctx.moveTo(-10, -5);
-        ctx.lineTo(-28, 0);
-        ctx.lineTo(-10, 5);
-        ctx.closePath();
-        ctx.fill();
+        ctx.moveTo(-10, -6); ctx.lineTo(-35, 0); ctx.lineTo(-10, 6);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
 
-        // Vẽ thân tàu vũ trụ màu bạc kim loại
-        ctx.fillStyle = '#cbd5e1';
+        // Thân chính của phi thuyền
+        ctx.fillStyle = '#f1f5f9';
         ctx.beginPath();
-        ctx.moveTo(-12, -7);
-        ctx.lineTo(12, 0);
-        ctx.lineTo(-12, 7);
-        ctx.closePath();
-        ctx.fill();
+        ctx.moveTo(-14, -8); ctx.lineTo(16, 0); ctx.lineTo(-14, 8);
+        ctx.closePath(); ctx.fill();
 
-        // Vẽ cánh tên lửa màu đỏ nổi bật
-        ctx.fillStyle = '#ef4444';
+        // Điểm nhấn sọc công nghệ màu Cyan
+        ctx.fillStyle = '#06b6d4';
         ctx.beginPath();
-        ctx.moveTo(-12, -7);
-        ctx.lineTo(-18, -12);
-        ctx.lineTo(-8, -5);
-        ctx.closePath();
-        ctx.fill();
+        ctx.moveTo(-4, -4); ctx.lineTo(6, 0); ctx.lineTo(-4, 4);
+        ctx.closePath(); ctx.fill();
 
+        // Đuôi cánh tên lửa
+        ctx.fillStyle = '#dc2626';
         ctx.beginPath();
-        ctx.moveTo(-12, 7);
-        ctx.lineTo(-18, 12);
-        ctx.lineTo(-8, 5);
-        ctx.closePath();
-        ctx.fill();
+        ctx.moveTo(-14, -8); ctx.lineTo(-20, -14); ctx.lineTo(-8, -6);
+        ctx.closePath(); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-14, 8); ctx.lineTo(-20, 14); ctx.lineTo(-8, 6);
+        ctx.closePath(); ctx.fill();
 
-        // Vẽ cửa kính của buồng lái phi hành gia
         ctx.fillStyle = '#38bdf8';
-        ctx.beginPath();
-        ctx.arc(2, 0, 3, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(4, 0, 3.5, 0, Math.PI * 2); ctx.fill();
 
         ctx.restore();
     } else {
-        // 7. Render Vụ nổ siêu thực (Explosion) bùng cháy nếu tàu Crash
+        // 7. Hiệu ứng Vụ Nổ Siêu Tân Tinh
         ctx.save();
-        ctx.shadowColor = '#ef4444';
-        ctx.shadowBlur = 35;
+        ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 40;
         
-        // Lớp khói bụi nổ đỏ cam ngoài cùng
-        ctx.fillStyle = 'rgba(239, 68, 68, 0.85)';
-        ctx.beginPath();
-        for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
-            let rx = endX + Math.cos(a) * (20 + Math.random() * 18);
-            let ry = endY + Math.sin(a) * (20 + Math.random() * 18);
-            ctx.arc(rx, ry, 15, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.75)';
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 5) {
+            let rx = endX + Math.cos(a) * (22 + Math.random() * 15);
+            let ry = endY + Math.sin(a) * (22 + Math.random() * 15);
+            ctx.beginPath(); ctx.arc(rx, ry, 18, 0, Math.PI * 2); ctx.fill();
         }
-        ctx.fill();
 
-        // Nhân vụ nổ rực vàng trung tâm
-        ctx.fillStyle = '#fbbf24';
-        ctx.beginPath();
-        ctx.arc(endX, endY, 20, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath(); ctx.arc(endX, endY, 24, 0, Math.PI * 2); ctx.fill();
 
-        // Điểm phát sáng chói trắng lõi nổ
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+        for (let j = 0; j < 8; j++) {
+            let angleSpark = (j * Math.PI) / 4;
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX + Math.cos(angleSpark) * 35, endY + Math.sin(angleSpark) * 35);
+            ctx.stroke();
+        }
+
         ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(endX, endY, 10, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(endX, endY, 12, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
     }
 
-    // 8. Khung viền mờ Glassmorphism chứa Hệ Số Nhân cực xịn
+    // 8. Hộp hiển thị Glassmorphism Neon VIP trung tâm
     ctx.save();
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
-    ctx.strokeStyle = isCrashed ? 'rgba(239, 68, 68, 0.4)' : 'rgba(0, 242, 254, 0.4)';
-    ctx.lineWidth = 1.5;
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = isCrashed ? '#ef4444' : '#00f2fe';
-    ctx.beginPath();
-    ctx.roundRect?.(200, 130, 200, 75, 15);
-    ctx.fill();
-    ctx.stroke();
+    ctx.fillStyle = 'rgba(10, 10, 22, 0.82)';
+    ctx.strokeStyle = isCrashed ? 'rgba(239, 68, 68, 0.4)' : 'rgba(6, 182, 212, 0.4)';
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = isCrashed ? '#ef4444' : '#06b6d4';
+    ctx.beginPath(); ctx.roundRect?.(200, 135, 200, 72, 12); ctx.fill(); ctx.stroke();
     ctx.restore();
 
-    // 9. Hiển thị hệ số nhân real-time siêu to rõ nét
-    ctx.fillStyle = isCrashed ? '#ef4444' : '#00ff66';
-    ctx.font = 'bold 44px Impact, Arial Black, Arial';
+    // 9. Chữ Số Hệ Nhân Phong Cách Digital sắc nét
+    ctx.fillStyle = isCrashed ? '#f87171' : '#34d399';
+    ctx.font = 'bold 42px Impact, Arial Black, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`${currentMultiplier.toFixed(2)}x`, 300, 182);
-
-    // Trục biểu đồ mờ để canh tọa độ
-    ctx.strokeStyle = 'rgba(51, 65, 85, 0.5)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(startX - 15, startY);
-    ctx.lineTo(540, startY);
-    ctx.moveTo(startX, startY + 15);
-    ctx.lineTo(startX, 40);
-    ctx.stroke();
+    ctx.fillText(`${currentMultiplier.toFixed(2)}x`, 300, 186);
 
     return canvas.toBuffer('image/png');
 }
 
-// Thuật toán sinh điểm phát nổ (Crash Point) cực kỳ công bằng
-// Tối thiểu là x1.08, ngăn chặn việc vừa vào nổ ngay (Insta-crash)
-function generateCrashPoint() {
-    const rand = Math.random();
-    if (rand < 0.05) return 1.08 + parseFloat((Math.random() * 0.1).toFixed(2)); // 5% cơ hội nổ sớm tại mốc x1.08 -> x1.18
-    return parseFloat((1.08 / (1 - Math.random())).toFixed(2));
-}
-
 client.on('messageCreate', async (message) => {
-    if (message.author.bot || !message.content.startsWith(PREFIX)) return;
+    if (message.author.bot) return;
 
-    const args = message.content.slice(PREFIX.length).trim().split(/ +/);
-    const command = args.shift().toLowerCase();
-
+    // Tự động tạo user mới nếu chưa có dữ liệu
     if (!db.hasUser(message.author.id)) {
         await db.addMoney(message.author.id, 50000);
         await updateTopRanksRoles(message.guild); 
     }
+
+    // ==========================================================
+    // 🤖 TỰ ĐỘNG TRỢ CẤP KHI TAG TRỰC TIẾP BOT (@Tên_Bot) - KHÔNG PREFIX
+    // ==========================================================
+    const hasDirectTagInText = message.content.includes(`<@${client.user.id}>`) || message.content.includes(`<@!${client.user.id}>`);
+
+    if (hasDirectTagInText) {
+        const userId = message.author.id;
+        const userMoney = db.getMoney(userId);
+        
+        const lastUsed = tagBotCooldown.get(userId) || 0;
+        const now = Date.now();
+        const cooldownTime = 3 * 60 * 1000; 
+
+        if (now - lastUsed < cooldownTime) {
+            const timeLeft = cooldownTime - (now - lastUsed);
+            const minutesLeft = Math.floor(timeLeft / 60000);
+            const secondsLeft = Math.floor((timeLeft % 60000) / 1000);
+            return message.reply(`⏰ Mày vội à?! Mày có **${minutesLeft} phút ${secondsLeft} giây** để suy nghĩ về cuộc đời rồi quay lại xin tiếp nhé!`);
+        }
+
+        if (userMoney <= 0) {
+            const subsidyAmount = 300000;
+            const finalMoney = await db.addMoney(userId, subsidyAmount);
+            await updateTopRanksRoles(message.guild);
+            
+            tagBotCooldown.set(userId, now);
+            return message.reply(`🪙 Xem <@${userId}> nó chơi ngu hết tiền lại đi xin tiền Bot này anh em, Nhà Đực phát cho **+${subsidyAmount.toLocaleString()}** làm lại cuộc đời nha.\n💰 Số dư mới: **${finalMoney.toLocaleString()}** xu.`);
+        } else {
+            return message.reply(`❌ Bạn vẫn đang còn **${userMoney.toLocaleString()}** xu trong ví mà, bao giờ về **0 xu** rồi hãy tag tôi cứu trợ nhé!`);
+        }
+    }
+
+    if (!message.content.startsWith(PREFIX)) return;
+
+    const args = message.content.slice(PREFIX.length).trim().split(/ +/);
+    const command = args.shift().toLowerCase();
 
     if (command === 'check') {
         const checkEmbed = new EmbedBuilder()
@@ -425,12 +468,14 @@ client.on('messageCreate', async (message) => {
         const totalGames = txTotal + dmTotal + bjTotal + slTotal + ctTotal + bcTotal + xxTotal + crTotal; 
         const totalWins = txWin + dmWin + bjWin + slWin + ctWin + bcWin + xxWin + crWin;
         const totalWinRate = totalGames > 0 ? ((totalWins / totalGames) * 100).toFixed(1) : "0.0";
+        const totalBetSum = userStats.totalBetAmount || 0; // Đọc tổng lượng cược tích lũy[cite: 1]
 
         const profileEmbed = new EmbedBuilder().setColor('#2b2d42').setTitle(`📊 Hồ Sơ — ${target.username}`)
             .addFields(
                 { name: '🪙 Số dư', value: `**${(userStats.money || 0).toLocaleString()}** 🪙`, inline: true },
                 { name: '🏆 Hạng', value: `#${rank}`, inline: true },
                 { name: '📈 Tỷ lệ thắng', value: `**${totalWinRate}%**`, inline: true },
+                { name: '💸 Tổng tiền đã cược', value: `**${totalBetSum.toLocaleString()}** 🪙`, inline: false },
                 { name: '📊 Thống Kê Các Trò Chơi', value: 
                     `🎲 **Tài Xỉu:** ${txTotal} ván (${txWin} thắng)\n` +
                     `💣 **Dò Mìn:** ${dmTotal} ván (${dmWin} thắng)\n` +
@@ -520,7 +565,6 @@ client.on('messageCreate', async (message) => {
     }
 
     if (command === 'resettien') {
-        // Phân quyền: Yêu cầu quyền Quản lý tin nhắn (Whitelist) hoặc Admin hệ thống
         const { PermissionFlagsBits } = require('discord.js');
         if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages) && 
             !message.member.permissions.has(PermissionFlagsBits.Administrator)) {
@@ -528,7 +572,6 @@ client.on('messageCreate', async (message) => {
         }
 
         if (args[0]?.toLowerCase() === 'all') {
-            // Lệnh reset "all" nhạy cảm vẫn yêu cầu bắt buộc quyền Administrator gốc
             if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
                 return message.reply('❌ Bạn cần quyền Administrator hệ thống để thực hiện Đại Thanh Lọc!');
             }
@@ -564,7 +607,7 @@ client.on('messageCreate', async (message) => {
             const resGet = await fetch(getUrl, { headers: { "Authorization": `Bearer ${GITHUB_TOKEN}`, "Accept": "application/vnd.github+json" } }).catch(() => null);
             if (resGet && resGet.ok) { const fileData = await resGet.json(); sha = fileData.sha; }
 
-            const body = { message: `🗄️ [Manual Backup] Kích hoạt bởi Admin ${message.author.username}`, content: base64Content };
+            const body = { message: `𗄖 [Manual Backup] Kích hoạt bởi Manual Admin ${message.author.username}`, content: base64Content };
             if (sha) body.sha = sha;
 
             const resPut = await fetch(getUrl, { method: "PUT", headers: { "Authorization": `Bearer ${GITHUB_TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -576,7 +619,7 @@ client.on('messageCreate', async (message) => {
     }
 
     // ==========================================================
-    // 🚀 GAME: TÀU VŨ TRỤ SIÊU TỐC (CRASH GAME) - MULTIPLAYER (HẠN CHẾ SPAM NHẬN THÔNG BÁO)
+    // 🚀 GAME: TÀU VŨ TRỤ SIÊU TỐC (CRASH GAME) - ĐÃ FIX TREO SẢNH & TIMEOUT CHỜ
     // ==========================================================
     if (command === 'crash') {
         const channelId = message.channel.id;
@@ -586,8 +629,8 @@ client.on('messageCreate', async (message) => {
 
         const crashState = {
             channelId,
-            status: 'lobby', // 'lobby' | 'flying' | 'crashed'
-            players: new Map(), // userId -> { bet, username, cashedOut: false, payoutMultiplier: null }
+            status: 'lobby', 
+            players: new Map(), 
             crashPoint: generateCrashPoint(),
             currentMultiplier: 1.0
         };
@@ -596,43 +639,42 @@ client.on('messageCreate', async (message) => {
         const lobbyEmbed = new EmbedBuilder()
             .setColor('#7289da')
             .setTitle('🚀 PHÒNG CHỜ TÀU VŨ TRỤ SIÊU TỐC 🚀')
-            .setDescription(`👤 Cơ trưởng: <@${message.author.id}>\n⏰ Cổng đăng ký vé bay đang mở trong **20 giây**!\n👉 Bấm các nút bên dưới để lên tàu cùng mọi người nào!`);
+            .setDescription(`👤 Cơ trưởng: <@${message.author.id}>\n⏰ Cổng đăng ký vé bay đang mở trong **15 giây**!\n👉 Bấm các nút cược nhỏ gọn bên dưới để lên tàu nào!`);
 
         const lobbyButtons = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId(`crash_join_10k_${channelId}`).setLabel('Đặt 10K 🪙').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId(`crash_join_50k_${channelId}`).setLabel('Đặt 50K 🪙').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId(`crash_join_100k_${channelId}`).setLabel('Đặt 100K 🪙').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId(`crash_join_all_${channelId}`).setLabel('All-in Toàn Bộ 🪙').setStyle(ButtonStyle.Danger)
+            new ButtonBuilder().setCustomId(`crash_join_10k_${channelId}`).setLabel('10K 🪙').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId(`crash_join_50k_${channelId}`).setLabel('50K 🪙').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId(`crash_join_100k_${channelId}`).setLabel('100K 🪙').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId(`crash_join_500k_${channelId}`).setLabel('500K 🪙').setStyle(ButtonStyle.Primary), 
+            new ButtonBuilder().setCustomId(`crash_join_all_${channelId}`).setLabel('All-in 💀').setStyle(ButtonStyle.Danger)
         );
 
         const response = await message.reply({ embeds: [lobbyEmbed], components: [lobbyButtons] }).catch(() => null);
         if (!response) { activeCrash.delete(channelId); return; }
 
-        const lobbyCollector = response.createMessageComponentCollector({ time: 20000 });
+        const lobbyCollector = response.createMessageComponentCollector({ time: 15000 });
 
         lobbyCollector.on('collect', async i => {
+            await i.deferUpdate().catch(() => null);
+
             const userId = i.user.id;
             const action = i.customId.split('_')[2];
 
-            if (!db.hasUser(userId)) {
-                await db.addMoney(userId, 50000);
-            }
+            if (!db.hasUser(userId)) await db.addMoney(userId, 50000);
 
             const userMoney = db.getMoney(userId);
             let bet = 10000;
             if (action === '50k') bet = 50000;
             else if (action === '100k') bet = 100000;
+            else if (action === '500k') bet = 500000; 
             else if (action === 'all') bet = userMoney;
 
-            // Kiểm tra số dư người chơi
             if (userMoney < bet || bet <= 0) {
-                return i.reply({ content: '❌ Tài khoản không đủ số dư để mua thêm vé bay này!', flags: [MessageFlags.Ephemeral] });
+                return i.followUp({ content: '❌ Tài khoản không đủ số dư để mua thêm vé bay này!', flags: [MessageFlags.Ephemeral] }).catch(() => null);
             }
 
-            // Trừ tiền cược cục bộ
-            await db.addMoney(userId, -bet);
+            await db.addMoney(userId, -bet, null, null, bet);
 
-            // Tích lũy tiền cược thay vì chặn ghi đè nếu hành khách đã lên tàu
             if (crashState.players.has(userId)) {
                 const currentTicket = crashState.players.get(userId);
                 currentTicket.bet += bet;
@@ -641,7 +683,6 @@ client.on('messageCreate', async (message) => {
                 crashState.players.set(userId, { bet, username: i.user.username, cashedOut: false, payoutMultiplier: null });
             }
 
-            // Dùng i.update để sửa đổi trạng thái cược ngay tại thời gian thực mà KHÔNG gửi thêm bong bóng thông báo ẩn
             const passengerList = Array.from(crashState.players.entries())
                 .map(([pId, p]) => `• <@${pId}>: \`${p.bet.toLocaleString()}\` 🪙`)
                 .join('\n');
@@ -651,7 +692,7 @@ client.on('messageCreate', async (message) => {
                 .setTitle('🚀 PHÒNG CHỜ TÀU VŨ TRỤ SIÊU TỐC 🚀')
                 .setDescription(`👤 Cơ trưởng: <@${message.author.id}>\n⏰ Cổng cược đang mở...\n\n👥 **HÀNH KHÁCH ĐÃ LÊN TÀU (${crashState.players.size}):**\n${passengerList}`);
 
-            await i.update({ embeds: [updatedLobbyEmbed] }).catch(() => null);
+            await i.editReply({ embeds: [updatedLobbyEmbed] }).catch(() => null);
         });
 
         lobbyCollector.on('end', async () => {
@@ -661,132 +702,133 @@ client.on('messageCreate', async (message) => {
                 return response.edit({ embeds: [failEmbed], components: [] }).catch(() => null);
             }
 
-            crashState.status = 'flying';
-            activeCrash.set(channelId, crashState);
+            try {
+                crashState.status = 'flying';
+                activeCrash.set(channelId, crashState);
 
-            const cashOutRow = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId(`crash_cashout_${channelId}`).setLabel('💰 CASH OUT (CHỐT LỜI)').setStyle(ButtonStyle.Success)
-            );
+                const cashOutRow = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId(`crash_cashout_${channelId}`).setLabel('💰 CASH OUT (CHỐT LỜI)').setStyle(ButtonStyle.Success)
+                );
 
-            const initialBuffer = await drawRocketCanvas(1.0);
-            const initialAttachment = new AttachmentBuilder(initialBuffer, { name: `crash_${Date.now()}.png` });
+                const initialBuffer = await drawRocketCanvas(1.0);
+                const initialAttachment = new AttachmentBuilder(initialBuffer, { name: `crash_${Date.now()}.png` });
 
-            const flyingEmbed = new EmbedBuilder()
-                .setColor('#f1c40f')
-                .setTitle('🚀 TÀU VŨ TRỤ ĐÃ CẤT CÁNH!')
-                .setImage(`attachment://${initialAttachment.name}`);
+                const flyingEmbed = new EmbedBuilder()
+                    .setColor('#f1c40f')
+                    .setTitle('🚀 TÀU VŨ TRỤ ĐÃ CẤT CÁNH!')
+                    .setImage(`attachment://${initialAttachment.name}`);
 
-            const gameMsg = await response.edit({
-                embeds: [flyingEmbed],
-                files: [initialAttachment],
-                components: [cashOutRow],
-                attachments: []
-            }).catch(() => null);
+                const gameMsg = await response.edit({
+                    embeds: [flyingEmbed],
+                    files: [initialAttachment],
+                    components: [cashOutRow],
+                    attachments: []
+                }).catch(() => null);
 
-            if (!gameMsg) {
-                for (const [pId, p] of crashState.players.entries()) {
-                    await db.addMoney(pId, p.bet);
-                }
-                activeCrash.delete(channelId);
-                return;
-            }
-
-            const gameCollector = gameMsg.createMessageComponentCollector({ time: 180000 });
-
-            gameCollector.on('collect', async i => {
-                const userId = i.user.id;
-                if (i.customId.startsWith('crash_cashout_')) {
-                    const player = crashState.players.get(userId);
-                    if (!player) {
-                        return i.reply({ content: '❌ Bạn không có vé trong chuyến bay này!', flags: [MessageFlags.Ephemeral] });
-                    }
-                    if (player.cashedOut) {
-                        return i.reply({ content: '❌ Bạn đã nhảy dù chốt lời rồi!', flags: [MessageFlags.Ephemeral] });
-                    }
-
-                    player.cashedOut = true;
-                    player.payoutMultiplier = crashState.currentMultiplier;
-                    const winAmount = Math.floor(player.bet * crashState.currentMultiplier);
-                    await db.addMoney(userId, winAmount, true, 'crash');
-
-                    await i.reply({ content: `🎉 **CHỐT LỜI THÀNH CÔNG!** Bạn đã nhảy dù ở mốc **x${crashState.currentMultiplier.toFixed(2)}**, nhận về **+${winAmount.toLocaleString()}** 🪙.`, flags: [MessageFlags.Ephemeral] });
-                }
-            });
-
-            // Tăng tốc độ bay mượt mà: cập nhật ảnh sau mỗi 1.2 giây
-            const interval = setInterval(async () => {
-                const speed = 0.04 + (crashState.currentMultiplier * 0.02); 
-                crashState.currentMultiplier = parseFloat((crashState.currentMultiplier + speed).toFixed(2));
-
-                if (crashState.currentMultiplier >= crashState.crashPoint) {
-                    clearInterval(interval);
-                    gameCollector.stop('crashed');
-
-                    const finalBuffer = await drawRocketCanvas(crashState.crashPoint, true);
-                    const finalAttachment = new AttachmentBuilder(finalBuffer, { name: `crash_boom_${Date.now()}.png` });
-
-                    let winText = "";
-                    let loseText = "";
-
-                    for (const [pId, p] of crashState.players.entries()) {
-                        if (p.cashedOut) {
-                            winText += `• <@${pId}>: Chốt **x${p.payoutMultiplier.toFixed(2)}** ➔ \`+${Math.floor(p.bet * p.payoutMultiplier).toLocaleString()}\` 🪙\n`;
-                        } else {
-                            await db.addMoney(pId, 0, false, 'crash'); 
-                            loseText += `• <@${pId}>: Bị nổ tung tại **x${crashState.crashPoint.toFixed(2)}** ➔ \`-${p.bet.toLocaleString()}\` 🪙\n`;
-                        }
-                    }
-
-                    const summaryEmbed = new EmbedBuilder()
-                        .setColor('#ff3333')
-                        .setTitle(`💥 TÀU ĐÃ NỔ TẠI MỐC x${crashState.crashPoint.toFixed(2)} 💥`)
-                        .setDescription(
-                            `📋 **BÁO CÁO TOÀN CHUYẾN BAY:**\n\n` +
-                            `🟢 **Thoát hiểm thành công (Có lời):**\n${winText || '• Không ai thoát kịp.'}\n` +
-                            `🔴 **Tan biến trong vụ nổ (Thua cuộc):**\n${loseText || '• Không có ai.'}`
-                        )
-                        .setImage(`attachment://${finalAttachment.name}`);
-
-                    await gameMsg.edit({
-                        embeds: [summaryEmbed],
-                        files: [finalAttachment],
-                        components: [],
-                        attachments: []
-                    }).catch(() => null);
-
+                if (!gameMsg) {
+                    for (const [pId, p] of crashState.players.entries()) await db.addMoney(pId, p.bet, null, null, -p.bet);
                     activeCrash.delete(channelId);
-                    await updateTopRanksRoles(message.guild);
-                } else {
-                    const nextBuffer = await drawRocketCanvas(crashState.currentMultiplier);
-                    const nextAttachment = new AttachmentBuilder(nextBuffer, { name: `crash_${Date.now()}.png` });
-
-                    const passengerStatus = Array.from(crashState.players.entries())
-                        .map(([pId, p]) => {
-                            if (p.cashedOut) return `<@${pId}> (\`đã chốt x${p.payoutMultiplier.toFixed(2)}\`)`;
-                            return `<@${pId}> (\`đang đợi...\`)`;
-                        })
-                        .join(', ');
-
-                    const nextEmbed = new EmbedBuilder()
-                        .setColor('#f1c40f')
-                        .setTitle('🚀 TÀU VŨ TRỤ ĐANG BAY!')
-                        .setDescription(`👥 **Tình trạng khoang tàu:** ${passengerStatus}`)
-                        .setImage(`attachment://${nextAttachment.name}`);
-
-                    await gameMsg.edit({
-                        embeds: [nextEmbed],
-                        files: [nextAttachment],
-                        components: [cashOutRow],
-                        attachments: []
-                    }).catch(() => null);
+                    return;
                 }
-            }, 1200);
 
+                const gameCollector = gameMsg.createMessageComponentCollector({ time: 180000 });
+
+                gameCollector.on('collect', async i => {
+                    const userId = i.user.id;
+                    if (i.customId.startsWith('crash_cashout_')) {
+                        const player = crashState.players.get(userId);
+                        if (!player) return i.reply({ content: '❌ Bạn không có vé trong chuyến bay này!', flags: [MessageFlags.Ephemeral] }).catch(() => null);
+                        if (player.cashedOut) return i.reply({ content: '❌ Bạn đã nhảy dù chốt lời rồi!', flags: [MessageFlags.Ephemeral] }).catch(() => null);
+
+                        player.cashedOut = true;
+                        player.payoutMultiplier = crashState.currentMultiplier;
+                        const winAmount = Math.floor(player.bet * crashState.currentMultiplier);
+                        await db.addMoney(userId, winAmount, true, 'crash');
+
+                        await i.reply({ content: `🎉 **CHỐT LỜI THÀNH CÔNG!** Bạn đã nhảy dù ở mốc **x${crashState.currentMultiplier.toFixed(2)}**, nhận về **+${winAmount.toLocaleString()}** 🪙.`, flags: [MessageFlags.Ephemeral] }).catch(() => null);
+                    }
+                });
+
+                const interval = setInterval(async () => {
+                    try {
+                        const speed = 0.04 + (crashState.currentMultiplier * 0.02); 
+                        crashState.currentMultiplier = parseFloat((crashState.currentMultiplier + speed).toFixed(2));
+
+                        if (crashState.currentMultiplier >= crashState.crashPoint) {
+                            clearInterval(interval);
+                            gameCollector.stop('crashed');
+
+                            const finalBuffer = await drawRocketCanvas(crashState.crashPoint, true);
+                            const finalAttachment = new AttachmentBuilder(finalBuffer, { name: `crash_boom_${Date.now()}.png` });
+
+                            let winText = ""; let loseText = "";
+
+                            for (const [pId, p] of crashState.players.entries()) {
+                                if (p.cashedOut) {
+                                    winText += `• <@${pId}>: Chốt **x${p.payoutMultiplier.toFixed(2)}** ➔ \`+${Math.floor(p.bet * p.payoutMultiplier).toLocaleString()}\` 🪙\n`;
+                                } else {
+                                    await db.addMoney(pId, 0, false, 'crash'); 
+                                    loseText += `• <@${pId}>: Bị nổ tung tại **x${crashState.crashPoint.toFixed(2)}** ➔ \`-${p.bet.toLocaleString()}\` 🪙\n`;
+                                }
+                            }
+
+                            const summaryEmbed = new EmbedBuilder()
+                                .setColor('#ff3333')
+                                .setTitle(`💥 TÀU ĐÃ NỔ TẠI MỐC x${crashState.crashPoint.toFixed(2)} 💥`)
+                                .setDescription(
+                                    `📋 **BÁO CÁO TOÀN CHUYẾN BAY:**\n\n` +
+                                    `🟢 **Thoát hiểm thành công (Có lời):**\n${winText || '• Không ai thoát kịp.'}\n` +
+                                    `🔴 **Tan biến trong vụ nổ (Thua cuộc):**\n${loseText || '• Không có ai.'}`
+                                )
+                                .setImage(`attachment://${finalAttachment.name}`);
+
+                            await gameMsg.edit({
+                                embeds: [summaryEmbed],
+                                files: [finalAttachment],
+                                components: [],
+                                attachments: []
+                            }).catch(() => null);
+
+                            activeCrash.delete(channelId);
+                        } else {
+                            const nextBuffer = await drawRocketCanvas(crashState.currentMultiplier);
+                            const nextAttachment = new AttachmentBuilder(nextBuffer, { name: `crash_${Date.now()}.png` });
+
+                            const passengerStatus = Array.from(crashState.players.entries())
+                                .map(([pId, p]) => p.cashedOut ? `<@${pId}> (\`đã chốt x${p.payoutMultiplier.toFixed(2)}\`)` : `<@${pId}> (\`đang đợi...\`)`)
+                                .join(', ');
+
+                            const nextEmbed = new EmbedBuilder()
+                                .setColor('#f1c40f')
+                                .setTitle('🚀 TÀU VŨ TRỤ ĐÃ ĐANG BAY!')
+                                .setDescription(`👥 **Tình trạng khoang tàu:** ${passengerStatus}`)
+                                .setImage(`attachment://${nextAttachment.name}`);
+
+                            await gameMsg.edit({
+                                embeds: [nextEmbed],
+                                files: [nextAttachment],
+                                components: [cashOutRow],
+                                attachments: []
+                            }).catch(() => null);
+                        }
+                    } catch (loopErr) {
+                        console.error("Lỗi trong vòng lặp bay Crash:", loopErr);
+                        clearInterval(interval);
+                        activeCrash.delete(channelId);
+                    }
+                }, 1200);
+
+            } catch (endErr) {
+                console.error("Lỗi khởi động cất cánh Crash:", endErr);
+                for (const [pId, p] of crashState.players.entries()) await db.addMoney(pId, p.bet, null, null, -p.bet);
+                activeCrash.delete(channelId);
+                await response.edit({ content: "🚨 Hệ thống điều khiển tên lửa gặp sự cố kỹ thuật! Đã thu hồi lệnh cất cánh và hoàn trả tiền cược.", components: [] }).catch(() => null);
+            }
         });
     }
 
     // ==========================================================
-    // 🎲 GAME 1: TÀI XỈU LẬT VIÊN
+    // 🎲 GAME 1: TÀI XỈU LẬT VIÊN [LAYER GLOW FIXED]
     // ==========================================================
     if (command === 'taixiu' || command === 'tx') {
         const luaChon = args[0]?.toLowerCase();
@@ -808,19 +850,36 @@ client.on('messageCreate', async (message) => {
             const canvas = createCanvas(600, 320); const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#111827'; ctx.fillRect(0, 0, 600, 320);
             
+            ctx.save();
+            ctx.shadowColor = 'rgba(16, 185, 129, 0.4)'; 
+            ctx.shadowBlur = 10;
             ctx.strokeStyle = '#10b981'; ctx.lineWidth = 3;
             ctx.beginPath(); ctx.roundRect?.(15, 15, 570, 290, 18); ctx.stroke();
+            ctx.restore();
             
             const slotsX = [95, 250, 405];
             const diceY = 48;
             
             for (let i = 0; i < 3; i++) {
                 if (!openedStatus[i]) {
+                    ctx.save();
                     ctx.fillStyle = '#1f2937'; ctx.beginPath(); ctx.roundRect?.(slotsX[i], diceY, 100, 100, 18); ctx.fill();
                     ctx.strokeStyle = '#374151'; ctx.lineWidth = 2; ctx.stroke();
+                    ctx.restore();
                     ctx.fillStyle = '#f87171'; ctx.font = 'bold 45px Arial'; ctx.fillText('?', slotsX[i] + 35, diceY + 65);
                 } else {
-                    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.roundRect?.(slotsX[i], diceY, 100, 100, 18); ctx.fill();
+                    ctx.save();
+                    ctx.shadowColor = 'rgba(0, 242, 254, 0.7)';
+                    ctx.shadowBlur = 22; 
+                    ctx.fillStyle = 'rgba(0, 242, 254, 0.2)';
+                    ctx.beginPath(); ctx.roundRect?.(slotsX[i] - 4, diceY - 4, 108, 108, 20); ctx.fill();
+                    ctx.restore();
+
+                    ctx.save();
+                    ctx.fillStyle = '#ffffff'; 
+                    ctx.beginPath(); ctx.roundRect?.(slotsX[i], diceY, 100, 100, 18); ctx.fill();
+                    ctx.restore();
+
                     const cx = slotsX[i] + 50; const cy = diceY + 50; const r = 6.5; const p = 24;
                     const num = currentDice[i];
                     
@@ -849,7 +908,10 @@ client.on('messageCreate', async (message) => {
                 ctx.fillStyle = '#ffffff'; ctx.font = 'bold 16px Arial';
                 ctx.fillText(`Tổng: ${currentTotal}`, 270, diceY + 120);
                 
+                ctx.save();
+                ctx.shadowColor = 'rgba(4, 120, 87, 0.5)'; ctx.shadowBlur = 8;
                 ctx.fillStyle = '#047857'; ctx.beginPath(); ctx.roundRect?.(210, diceY + 132, 180, 38, 10); ctx.fill();
+                ctx.restore();
                 ctx.fillStyle = '#ffffff'; ctx.font = 'bold 15px Arial';
                 const labelText = currentRes === 'tai' ? 'TÀI (11-18)' : 'XỈU (3-10)';
                 ctx.fillText(labelText, 255, diceY + 156);
@@ -948,13 +1010,13 @@ client.on('messageCreate', async (message) => {
             let finalMoney = 0;
 
             if (game.xucXac[0] === game.xucXac[1] && game.xucXac[1] === game.xucXac[2]) {
-                finalMoney = await db.addMoney(userId, game.bet * 5, true, 'taixiu'); 
+                finalMoney = await db.addMoney(userId, game.bet * 5, true, 'taixiu', game.bet);
                 winMsg = `🔥 **NỔ BÃO x6 THƯỞNG!** Số dư: **${finalMoney.toLocaleString()}** xu.`; mauEmbed = "#ffbb00";
             } else if (game.luaChon === game.ketQua) {
-                finalMoney = await db.addMoney(userId, game.bet, true, 'taixiu'); 
+                finalMoney = await db.addMoney(userId, game.bet, true, 'taixiu', game.bet);
                 winMsg = `🎉 **Bạn đã THẮNG!** Số dư: **${finalMoney.toLocaleString()}** xu.`; mauEmbed = "#00ff00";
             } else {
-                finalMoney = await db.addMoney(userId, -game.bet, false, 'taixiu'); 
+                finalMoney = await db.addMoney(userId, -game.bet, false, 'taixiu', game.bet);
                 winMsg = `😢 **Bạn đã THUA!** Số dư: **${finalMoney.toLocaleString()}** xu.`;
             }
 
@@ -990,7 +1052,7 @@ client.on('messageCreate', async (message) => {
 
             const multiplier = getMineMultiplier(game.diamondsFound);
             const totalProfit = Math.floor(game.bet * (multiplier - 1)); 
-            const finalMoney = await db.addMoney(userId, totalProfit, true, 'domin');
+            const finalMoney = await db.addMoney(userId, totalProfit, true, 'domin', game.bet);
 
             const generateFinalComponents = () => {
                 const rows = [];
@@ -999,11 +1061,8 @@ client.on('messageCreate', async (message) => {
                     for (let j = 0; j < 5; j++) {
                         const index = i * 5 + j;
                         const button = new ButtonBuilder().setCustomId(`mine_${index}_${userId}`).setDisabled(true);
-                        if (game.board[index] === '💣') {
-                            button.setStyle(ButtonStyle.Danger).setLabel('💣');
-                        } else {
-                            button.setStyle(ButtonStyle.Success).setLabel('💎');
-                        }
+                        if (game.board[index] === '💣') button.setStyle(ButtonStyle.Danger).setLabel('💣');
+                        else button.setStyle(ButtonStyle.Success).setLabel('💎');
                         row.addComponents(button);
                     }
                     rows.push(row);
@@ -1077,7 +1136,7 @@ client.on('messageCreate', async (message) => {
 
             if (game.board[idx] === '💣') {
                 collector.stop('hit_bomb');
-                const finalMoney = await db.addMoney(userId, -game.bet, false, 'domin'); 
+                const finalMoney = await db.addMoney(userId, -game.bet, false, 'domin', game.bet); 
 
                 const generateLoseComponents = () => {
                     const rows = [];
@@ -1086,11 +1145,8 @@ client.on('messageCreate', async (message) => {
                         for (let b = 0; b < 5; b++) {
                             const idxLose = a * 5 + b;
                             const btn = new ButtonBuilder().setCustomId(`mine_${idxLose}_${userId}`).setDisabled(true);
-                            if (game.board[idxLose] === '💣') {
-                                btn.setStyle(ButtonStyle.Danger).setLabel('💣'); 
-                            } else {
-                                btn.setStyle(ButtonStyle.Success).setLabel('💎'); 
-                            }
+                            if (game.board[idxLose] === '💣') btn.setStyle(ButtonStyle.Danger).setLabel('💣'); 
+                            else btn.setStyle(ButtonStyle.Success).setLabel('💎'); 
                             row.addComponents(btn);
                         }
                         rows.push(row);
@@ -1114,7 +1170,7 @@ client.on('messageCreate', async (message) => {
                 
                 if (game.diamondsFound === 21) {
                     collector.stop('perfect_win');
-                    const finalMoney = await db.addMoney(userId, game.bet * 5, true, 'domin'); 
+                    const finalMoney = await db.addMoney(userId, game.bet * 5, true, 'domin', game.bet); 
                     
                     const generateWinComponents = () => {
                         const rows = [];
@@ -1159,7 +1215,7 @@ client.on('messageCreate', async (message) => {
             if (reason === 'time') {
                 const multiplier = getMineMultiplier(game.diamondsFound);
                 const totalProfit = Math.floor(game.bet * (multiplier - 1));
-                const finalMoney = await db.addMoney(userId, totalProfit, true, 'domin');
+                const finalMoney = await db.addMoney(userId, totalProfit, true, 'domin', game.bet); 
 
                 const generateFinalComponents = () => {
                     const rows = [];
@@ -1168,11 +1224,8 @@ client.on('messageCreate', async (message) => {
                         for (let j = 0; j < 5; j++) {
                             const index = i * 5 + j;
                             const button = new ButtonBuilder().setCustomId(`mine_${index}_${userId}`).setDisabled(true);
-                            if (game.board[index] === '💣') {
-                                button.setStyle(ButtonStyle.Danger).setLabel('💣');
-                            } else {
-                                button.setStyle(ButtonStyle.Success).setLabel('💎');
-                            }
+                            if (game.board[index] === '💣') button.setStyle(ButtonStyle.Danger).setLabel('💣');
+                            else button.setStyle(ButtonStyle.Success).setLabel('💎');
                             row.addComponents(button);
                         }
                     }
@@ -1192,7 +1245,7 @@ client.on('messageCreate', async (message) => {
     }
 
     // ==========================================================
-    // 🃏 GAME 3: BLACKJACK XÌ DÁCH
+    // 🃏 GAME 3: BLACKJACK XÌ DÁCH [LAYER GLOW FIXED]
     // ==========================================================
     if (command === 'blackjack' || command === 'bj') {
         const userId = message.author.id;
@@ -1244,12 +1297,29 @@ client.on('messageCreate', async (message) => {
         const drawBlackjackCanvas = async (pHand, dHand, isDone = false, statusText = "") => {
             const canvas = createCanvas(650, 420); const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#0f3024'; ctx.fillRect(0, 0, 650, 420);
+            
+            ctx.save();
+            ctx.shadowColor = 'rgba(197, 160, 89, 0.4)'; 
+            ctx.shadowBlur = 10;
             ctx.strokeStyle = '#c5a059'; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect?.(25, 25, 600, 370, 20); ctx.stroke();
+            ctx.restore();
+
             ctx.fillStyle = '#c5a059'; ctx.font = 'bold 15px Arial'; ctx.fillText(`CƯỢC: ${bet.toLocaleString()}`, 480, 55);
             ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'; ctx.fillText(`NHÀ CÁI`, 55, 55); ctx.fillText(`BẠN`, 55, 380);
 
             const drawVectorCard = (cardObj, x, y, isHidden = false) => {
-                ctx.fillStyle = isHidden ? '#9b2226' : '#ffffff'; ctx.beginPath(); ctx.roundRect?.(x, y, 76, 108, 10); ctx.fill();
+                ctx.save();
+                ctx.shadowColor = isHidden ? 'rgba(239, 68, 68, 0.6)' : 'rgba(0, 242, 254, 0.5)';
+                ctx.shadowBlur = 24; 
+                ctx.fillStyle = isHidden ? 'rgba(239, 68, 68, 0.15)' : 'rgba(0, 242, 254, 0.15)';
+                ctx.beginPath(); ctx.roundRect?.(x - 4, y - 4, 84, 116, 12); ctx.fill();
+                ctx.restore();
+
+                ctx.save();
+                ctx.fillStyle = isHidden ? '#9b2226' : '#fcfdfe'; 
+                ctx.beginPath(); ctx.roundRect?.(x, y, 76, 108, 10); ctx.fill();
+                ctx.restore();
+
                 if (isHidden) return;
                 const isRed = ['H', 'D'].includes(cardObj.suit); ctx.fillStyle = isRed ? '#ae2012' : '#111827';
                 ctx.font = 'bold 20px Arial'; ctx.fillText(cardObj.val, x + 10, y + 25);
@@ -1301,9 +1371,9 @@ client.on('messageCreate', async (message) => {
             if (isDraw) {
                 finalMoney = db.getMoney(userId);
             } else if (isWin) {
-                finalMoney = await db.addMoney(userId, bet, true, 'blackjack');
+                finalMoney = await db.addMoney(userId, bet, true, 'blackjack', bet); 
             } else {
-                finalMoney = await db.addMoney(userId, -bet, false, 'blackjack');
+                finalMoney = await db.addMoney(userId, -bet, false, 'blackjack', bet); 
             }
 
             const finalAttachment = await drawBlackjackCanvas(playerHand, dealerHand, true, `🔥 ${playerSpecial.type || dealerSpecial.type} KHAI CUỘC 🔥`);
@@ -1343,7 +1413,7 @@ client.on('messageCreate', async (message) => {
 
                 if (pScoreNow > 21) {
                     collector.stop('busted'); 
-                    const finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack'); 
+                    const finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack', game.bet); 
                     const finalAttachment = await drawBlackjackCanvas(game.playerHand, game.dealerHand, true, 'KẾT THÚC - BẠN BỊ QUẮC BÀI 💀');
                     
                     const finalEmbed = new EmbedBuilder().setColor('#ff0000').setTitle('🃏 KẾT QUẢ BLACKJACK 🃏')
@@ -1357,7 +1427,7 @@ client.on('messageCreate', async (message) => {
 
                 if (game.playerHand.length === 5 && pScoreNow <= 21) {
                     collector.stop('ngulinh'); 
-                    const finalMoney = await db.addMoney(userId, game.bet * 3, true, 'blackjack'); 
+                    const finalMoney = await db.addMoney(userId, game.bet * 3, true, 'blackjack', game.bet); 
                     const finalAttachment = await drawBlackjackCanvas(game.playerHand, game.dealerHand, true, '👑 NGŨ LINH ĐẠI CÁT 👑');
                     const tongNhanVe = game.bet * 4;
 
@@ -1401,25 +1471,25 @@ client.on('messageCreate', async (message) => {
                 let finalMoney = 0;
 
                 if (dFinal === 22 && game.dealerHand.length === 2) {
-                    finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack');
+                    finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack', game.bet); 
                     msg = `😢 **Nhà cái lật bài đạt XÌ BÀN ngầm! Bạn đã thua cuộc.**`;
                 }
                 else if (dFinal > 21) { 
-                    finalMoney = await db.addMoney(userId, game.bet, true, 'blackjack'); 
+                    finalMoney = await db.addMoney(userId, game.bet, true, 'blackjack', game.bet); 
                     msg = `🎉 **Nhà cái quắc bài (${dFinal}đ)! Bạn thắng nhận về +${(game.bet * 2).toLocaleString()} xu.**`; 
                     embedColor = "#00ff00"; 
                 }
                 else if (game.dealerHand.length === 5 && dFinal <= 21) {
-                    finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack');
+                    finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack', game.bet); 
                     msg = `😢 **Nhà cái kéo đủ 5 lá đạt bộ NGŨ LINH (${dFinal}đ)! Bạn đã thua cuộc.**`;
                 }
                 else if (pFinal > dFinal) { 
-                    finalMoney = await db.addMoney(userId, game.bet, true, 'blackjack'); 
+                    finalMoney = await db.addMoney(userId, game.bet, true, 'blackjack', game.bet); 
                     msg = `🎉 **Bạn đã thắng cuộc!** (${pFinal}đ vs ${dFinal}đ).`; 
                     embedColor = "#00ff00"; 
                 }
                 else if (pFinal < dFinal) { 
-                    finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack'); 
+                    finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack', game.bet); 
                     msg = `😢 **Bạn thua cuộc!** Bài thấp hơn nhà cái (${pFinal}đ vs ${dFinal}đ).`; 
                 }
                 else { 
@@ -1439,13 +1509,13 @@ client.on('messageCreate', async (message) => {
                 await updateTopRanksRoles(message.guild);
             } 
             else if (reason === 'stand' && pFinal < 16) {
-                const finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack');
+                const finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack', game.bet); 
                 const finalAttachment = await drawBlackjackCanvas(game.playerHand, game.dealerHand, true, '❌ PHẠT ĐỀN DẰN NON ❌');
                 const finalEmbed = new EmbedBuilder().setColor('#ff0000').setTitle('🃏 PHẠT ĐỀN BLACKJACK 🃏')
                     .setDescription(`🎒 Bạn dằn bài khi chưa đủ tuổi tối thiểu (Mới đạt **${pFinal}** điểm). Bị xử thua phạt đền toàn bộ cược.\n💰 Số dư hiện tại: **${finalMoney.toLocaleString()}** xu.`)
                     .setImage(`attachment://${finalAttachment.name}`);
                     
-                await response.edit({ embeds: [embed], files: [finalAttachment], components: [], attachments: [] }).catch(() => null);
+                await response.edit({ embeds: [finalEmbed], files: [finalAttachment], components: [], attachments: [] }).catch(() => null);
                 activeBlackjack.delete(userId);
             } 
             else if (reason === 'time' && pFinal < 16) {
@@ -1457,7 +1527,7 @@ client.on('messageCreate', async (message) => {
                 let finalAttachment;
                 let finalEmbed;
                 if (pFinal > 21) {
-                    const finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack');
+                    const finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack', game.bet); 
                     finalAttachment = await drawBlackjackCanvas(game.playerHand, game.dealerHand, true, '💀 TỰ ĐỘNG BỐC - BỊ QUẮC 💀');
                     finalEmbed = new EmbedBuilder().setColor('#ff0000').setTitle('🃏 KẾT QUẢ BLACKJACK (BỊ QUẮC) 🃏')
                         .setDescription(`🎒 Bài của bạn: **${pFinal} điểm** 💀 *(Quắc bài do tự động bốc)*\n\n📊 Thua cuộc! Bài vượt quá 21 điểm.\n💰 Số dư hiện tại: **${finalMoney.toLocaleString()}** xu.`)
@@ -1473,21 +1543,21 @@ client.on('messageCreate', async (message) => {
                     let finalMoney = 0;
 
                     if (dFinal === 22 && game.dealerHand.length === 2) {
-                        finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack');
+                        finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack', game.bet); 
                         msg = `😢 **Nhà cái lật bài đạt XÌ BÀN ngầm! Bạn đã thua cuộc.**`;
                     }
                     else if (dFinal > 21) { 
-                        finalMoney = await db.addMoney(userId, game.bet, true, 'blackjack'); 
+                        finalMoney = await db.addMoney(userId, game.bet, true, 'blackjack', game.bet); 
                         msg = `🎉 **Nhà cái quắc bài (${dFinal}đ)! Bạn thắng nhận về +${(game.bet * 2).toLocaleString()} xu.**`; 
                         embedColor = "#00ff00"; 
                     }
                     else if (pFinal > dFinal) { 
-                        finalMoney = await db.addMoney(userId, game.bet, true, 'blackjack'); 
+                        finalMoney = await db.addMoney(userId, game.bet, true, 'blackjack', game.bet); 
                         msg = `🎉 **Bạn đã thắng cuộc!** (${pFinal}đ vs ${dFinal}đ).`; 
                         embedColor = "#00ff00"; 
                     }
                     else if (pFinal < dFinal) { 
-                        finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack'); 
+                        finalMoney = await db.addMoney(userId, -game.bet, false, 'blackjack', game.bet); 
                         msg = `😢 **Bạn thua cuộc!** Bài thấp hơn nhà cái (${pFinal}đ vs ${dFinal}đ).`; 
                     }
                     else { 
@@ -1510,7 +1580,7 @@ client.on('messageCreate', async (message) => {
     }
 
     // ==========================================================
-    // 🎰 GAME 4: MINI SLOTS
+    // 🎰 GAME 4: MINI SLOTS [LAYER GLOW FIXED]
     // ==========================================================
     if (command === 'slots' || command === 'sl') {
         const userId = message.author.id;
@@ -1522,7 +1592,7 @@ client.on('messageCreate', async (message) => {
 
         if (isNaN(bet) || bet <= 0 || currentMoney < bet) return message.reply('❌ Số tiền cược không hợp lệ!');
 
-        await db.addMoney(userId, -bet);
+        await db.addMoney(userId, -bet, null, null, bet);
 
         const rand = Math.random() * 100;
         const icons = ['cherry', 'diamond', 'crown', 'fire'];
@@ -1549,23 +1619,47 @@ client.on('messageCreate', async (message) => {
 
         const drawSlotsCanvas = async (openedStatus, currentArr = finalSlots) => {
             const canvas = createCanvas(600, 260); const ctx = canvas.getContext('2d');
-            
             ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, 600, 260);
+            
+            ctx.save();
+            ctx.shadowColor = 'rgba(234, 179, 8, 0.4)'; 
+            ctx.shadowBlur = 10;
             ctx.strokeStyle = '#eab308'; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.roundRect?.(15, 15, 570, 230, 18); ctx.stroke(); 
+            ctx.restore();
 
             const slotsX = [40, 225, 410]; 
-            const cellW = 150;
-            const cellH = 170;
-            const cellY = 45;
+            const cellW = 150; const cellH = 170; const cellY = 45;
 
             for (let i = 0; i < 3; i++) {
-                ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.roundRect?.(slotsX[i], cellY, cellW, cellH, 15); ctx.fill();
-                ctx.strokeStyle = '#475569'; ctx.lineWidth = 2; ctx.stroke();
+                ctx.save();
+                let glowColor = 'rgba(59, 130, 246, 0.5)'; 
+                if (openedStatus[i]) {
+                    const type = currentArr[i];
+                    if (type === 'crown') glowColor = 'rgba(234, 179, 8, 0.6)';
+                    else if (type === 'diamond') glowColor = 'rgba(0, 242, 254, 0.6)';
+                    else if (type === 'fire') glowColor = 'rgba(239, 68, 68, 0.6)';
+                    else if (type === 'cherry') glowColor = 'rgba(236, 72, 153, 0.6)';
+                }
+                ctx.shadowColor = glowColor;
+                ctx.shadowBlur = 24; 
+                ctx.fillStyle = openedStatus[i] ? 'rgba(30, 41, 59, 0.2)' : 'rgba(59, 130, 246, 0.15)';
+                ctx.beginPath(); ctx.roundRect?.(slotsX[i] - 4, cellY - 4, cellW + 8, cellH + 8, 18); ctx.fill();
+                ctx.restore();
+
+                ctx.save();
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath(); ctx.roundRect?.(slotsX[i], cellY, cellW, cellH, 15); ctx.fill();
+                ctx.restore();
+
+                ctx.strokeStyle = '#475569'; ctx.lineWidth = 2; ctx.strokeRect(slotsX[i], cellY, cellW, cellH);
 
                 const cx = slotsX[i] + cellW / 2; const cy = cellY + cellH / 2;
                 if (!openedStatus[i]) {
+                    ctx.save();
+                    ctx.shadowColor = 'rgba(239, 68, 68, 0.4)'; ctx.shadowBlur = 6;
                     ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, 30, 0, Math.PI * 2); ctx.stroke();
+                    ctx.restore();
                     ctx.fillStyle = '#f87171'; ctx.font = 'bold 36px Arial'; ctx.fillText('?', cx - 10, cy + 12);
                 } else {
                     const type = currentArr[i];
@@ -1575,29 +1669,31 @@ client.on('messageCreate', async (message) => {
                     if (type === 'diamond') {
                         let grad = ctx.createLinearGradient(cx, cy - 35, cx, cy + 35); grad.addColorStop(0, '#38bdf8'); grad.addColorStop(1, '#0369a1'); ctx.fillStyle = grad;
                         ctx.beginPath(); ctx.moveTo(cx, cy - 35); ctx.lineTo(cx + 32, cy); ctx.lineTo(cx, cy + 35); ctx.lineTo(cx - 32, cy); ctx.closePath(); ctx.fill();
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-                        ctx.beginPath(); ctx.moveTo(cx, cy - 35); ctx.lineTo(cx + 32, cy); ctx.lineTo(cx, cy); ctx.closePath(); ctx.fill();
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-                        ctx.beginPath(); ctx.moveTo(cx, cy - 35); ctx.lineTo(cx - 32, cy); ctx.lineTo(cx, cy); ctx.closePath(); ctx.fill();
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)'; ctx.beginPath(); ctx.moveTo(cx, cy - 35); ctx.lineTo(cx + 32, cy); ctx.lineTo(cx, cy); ctx.closePath(); ctx.fill();
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; ctx.beginPath(); ctx.moveTo(cx, cy - 35); ctx.lineTo(cx - 32, cy); ctx.lineTo(cx, cy); ctx.closePath(); ctx.fill();
                     } else if (type === 'crown') {
                         let grad = ctx.createLinearGradient(cx, cy - 30, cx, cy + 30); grad.addColorStop(0, '#fde047'); grad.addColorStop(1, '#a16207'); ctx.fillStyle = grad;
-                        ctx.beginPath(); 
-                        ctx.moveTo(cx - 40, cy + 22); ctx.lineTo(cx + 40, cy + 22); 
-                        ctx.lineTo(cx + 45, cy - 15); 
-                        ctx.lineTo(cx + 20, cy + 2);   
-                        ctx.lineTo(cx, cy - 35);       
-                        ctx.lineTo(cx - 20, cy + 2);   
-                        ctx.lineTo(cx - 45, cy - 15);  
-                        ctx.closePath(); ctx.fill();
+                        ctx.beginPath(); ctx.moveTo(cx - 40, cy + 22); ctx.lineTo(cx + 40, cy + 22); ctx.lineTo(cx + 45, cy - 15); ctx.lineTo(cx + 20, cy + 2); ctx.lineTo(cx, cy - 35); ctx.lineTo(cx - 20, cy + 2); ctx.lineTo(cx - 45, cy - 15); ctx.closePath(); ctx.fill();
                         ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(cx, cy - 35, 6, 0, Math.PI*2); ctx.fill(); 
                         ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(cx - 45, cy - 15, 5, 0, Math.PI*2); ctx.fill(); 
                         ctx.fillStyle = '#fbbf24'; ctx.fillRect(cx - 35, cy + 16, 70, 4);
                     } else if (type === 'fire') {
-                        let grad = ctx.createLinearGradient(cx, cy - 35, cx, cy + 25); grad.addColorStop(0, '#f43f5e'); grad.addColorStop(0.5, '#f97316'); grad.addColorStop(1, '#eab308'); ctx.fillStyle = grad;
-                        ctx.beginPath(); ctx.moveTo(cx, cy + 25); ctx.bezierCurveTo(cx - 35, cy + 15, cx - 30, cy - 15, cx - 10, cy - 35); ctx.bezierCurveTo(cx - 5, cy - 20, cx + 5, cy - 20, cx + 10, cy - 30); ctx.bezierCurveTo(cx + 35, cy - 10, cx + 30, cy + 15, cx, cy + 25); ctx.closePath(); ctx.fill();
+                        let grad = ctx.createLinearGradient(cx, cy - 30, cx, cy + 30);
+                        grad.addColorStop(0, '#f43f5e');
+                        grad.addColorStop(1, '#f97316');
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy + 10, 25, 0, Math.PI * 2);
+                        ctx.arc(cx - 12, cy - 10, 18, 0, Math.PI * 2);
+                        ctx.arc(cx + 12, cy - 10, 18, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#eab308';
+                        ctx.beginPath();
+                        ctx.arc(cx, cy + 12, 14, 0, Math.PI * 2);
+                        ctx.fill();
                     } else if (type === 'cherry') {
                         ctx.fillStyle = '#dc2626'; ctx.beginPath(); ctx.arc(cx - 16, cy + 10, 15, 0, Math.PI * 2); ctx.arc(cx + 14, cy + 13, 14, 0, Math.PI * 2); ctx.fill();
-                        ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx - 12, cy - 4); ctx.quadraticCurveTo(cx - 5, cy - 25, cx + 10, cy - 25); ctx.moveTo(cx + 10, cy - 25); ctx.quadraticCurveTo(cx + 10, cy - 15, cx + 10, cy + 10); ctx.stroke();
+                        ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx - 12, cy - 4); ctx.quadraticCurveTo(cx - 5, cy - 25, cx + 10, cy - 25); ctx.stroke();
                     }
                     ctx.restore();
                 }
@@ -1615,7 +1711,15 @@ client.on('messageCreate', async (message) => {
 
         activeSlots.set(userId, { bet, finalSlots, openedStatus: [false, false, false], isProcessing: false });
 
-        const initialAttachment = await drawSlotsCanvas([false, false, false], finalSlots);
+        let initialAttachment;
+        try {
+            initialAttachment = await drawSlotsCanvas([false, false, false], finalSlots);
+        } catch (canvasErr) {
+            console.error("Lỗi vẽ Canvas Slots ban đầu:", canvasErr);
+            activeSlots.delete(userId);
+            return message.reply("❌ Đã có lỗi xảy ra trong quá trình dựng hình vẽ Slots!");
+        }
+
         const startEmbed = new EmbedBuilder().setColor('#ff9f1c').setTitle('🎰 SIÊU HŨ MINI SLOTS 🎰').setDescription(`👤 Người chơi: <@${userId}>\n💰 Tiền cược: **${bet.toLocaleString()}** xu\n\n⚡ Cửa cược đã sẵn sàng! Bấm các nút dưới đây để nặn từng ô nhé.\n⏰ Hạn giờ mở: **60 giây**`).setImage(`attachment://${initialAttachment.name}`);
         const response = await message.reply({ embeds: [startEmbed], files: [initialAttachment], components: generateSlotButtons([false, false, false]) }).catch(() => null);
 
@@ -1638,9 +1742,13 @@ client.on('messageCreate', async (message) => {
             if (isAllOpened) {
                 collector.stop('completed');
             } else {
-                const updateAttachment = await drawSlotsCanvas(game.openedStatus, game.finalSlots);
-                const updateEmbed = new EmbedBuilder().setColor('#ffaa00').setTitle('🎰 ĐANG KHUI TỪNG Ô HŨ...').setDescription(`👉 Bạn đang nặn hũ rất hồi hộp! Bấm tiếp các ô còn lại để mở toàn bộ.`).setImage(`attachment://${updateAttachment.name}`);
-                await i.editReply({ embeds: [updateEmbed], files: [updateAttachment], components: generateSlotButtons(game.openedStatus, false), attachments: [] }).catch(() => null);
+                try {
+                    const updateAttachment = await drawSlotsCanvas(game.openedStatus, game.finalSlots);
+                    const updateEmbed = new EmbedBuilder().setColor('#ffaa00').setTitle('🎰 ĐANG KHUI TỪNG Ô HŨ...').setDescription(`👉 Bạn đang nặn hũ rất hồi hộp! Bấm tiếp các ô còn lại để mở toàn bộ.`).setImage(`attachment://${updateAttachment.name}`);
+                    await i.editReply({ embeds: [updateEmbed], files: [updateAttachment], components: generateSlotButtons(game.openedStatus, false), attachments: [] }).catch(() => null);
+                } catch (canvasErr) {
+                    console.error("Lỗi vẽ Canvas Slots lúc lật:", canvasErr);
+                }
             }
         });
 
@@ -1665,30 +1773,35 @@ client.on('messageCreate', async (message) => {
             if (multiplier > 0) finalMoney = await db.addMoney(userId, game.bet * multiplier, true, 'slots');
             else finalMoney = await db.addMoney(userId, 0, false, 'slots');
 
-            const finalAttachment = await drawSlotsCanvas(finalOpened, game.finalSlots);
-            
-            let textResult = "";
-            if (multiplier > 0) {
-                const totalWinAmount = Math.floor(game.bet * multiplier);
-                const netProfit = totalWinAmount - game.bet;
-                textResult = `💵 Vốn đặt cược: **${game.bet.toLocaleString()}** xu\n📈 Số tiền thắng ròng: **+${netProfit.toLocaleString()}** xu\n💰 Tổng thưởng nhận được: **${totalWinAmount.toLocaleString()}** xu`;
-            } else {
-                textResult = `💵 Vốn đặt cược: **${game.bet.toLocaleString()}** xu\n📉 Thua lỗ: **-${game.bet.toLocaleString()}** xu\n💰 Tổng thưởng nhận được: **0** xu`;
-            }
-
-            const finalEmbed = new EmbedBuilder().setColor(embedColor)
-                .setTitle('🎰 KẾT QUẢ QUAY HŨ')
-                .setDescription(`🎯 Trạng thái: **${winMsg}**\n\n${textResult}\n💰 Số dư: **${finalMoney.toLocaleString()}** xu.`)
-                .setImage(`attachment://${finalAttachment.name}`);
+            try {
+                const finalAttachment = await drawSlotsCanvas(finalOpened, game.finalSlots);
                 
-            await response.edit({ embeds: [finalEmbed], files: [finalAttachment], components: [], attachments: [] }).catch(() => null);
+                let textResult = "";
+                if (multiplier > 0) {
+                    const totalWinAmount = Math.floor(game.bet * multiplier);
+                    const netProfit = totalWinAmount - game.bet;
+                    textResult = `💵 Vốn đặt cược: **${game.bet.toLocaleString()}** xu\n📈 Số tiền thắng ròng: **+${netProfit.toLocaleString()}** xu\n💰 Tổng thưởng nhận được: **${totalWinAmount.toLocaleString()}** xu`;
+                } else {
+                    textResult = `💵 Vốn đặt cược: **${game.bet.toLocaleString()}** xu\n📉 Thua lỗ: **-${game.bet.toLocaleString()}** xu\n💰 Tổng thưởng nhận được: **0** xu`;
+                }
+
+                const finalEmbed = new EmbedBuilder().setColor(embedColor)
+                    .setTitle('🎰 KẾT QUẢ QUAY HŨ')
+                    .setDescription(`🎯 Trạng thái: **${winMsg}**\n\n${textResult}\n💰 Số dư: **${finalMoney.toLocaleString()}** xu.`)
+                    .setImage(`attachment://${finalAttachment.name}`);
+                    
+                await response.edit({ embeds: [finalEmbed], files: [finalAttachment], components: [], attachments: [] }).catch(() => null);
+            } catch (canvasErr) {
+                console.error("Lỗi vẽ Canvas Slots lúc hoàn tất:", canvasErr);
+                await response.edit({ content: `🎰 Ván slots hoàn tất! Trạng thái: **${winMsg}**.\nSố dư ví: **${finalMoney.toLocaleString()}** xu.`, components: [] }).catch(() => null);
+            }
             activeSlots.delete(userId); 
             await updateTopRanksRoles(message.guild);
         });
     }
 
     // ==========================================================
-    // 🃏 GAME 5: CAO THẤP (HI-LO)
+    // 🃏 GAME 5: CAO THẤP (HI-LO) [LAYER GLOW FIXED]
     // ==========================================================
     if (command === 'caothap' || command === 'ct') {
         const userId = message.author.id;
@@ -1701,7 +1814,7 @@ client.on('messageCreate', async (message) => {
         let bet = rawBet?.toLowerCase() === 'all' ? currentMoney : parseInt(rawBet);
         if (isNaN(bet) || bet <= 0 || currentMoney < bet) return message.reply('❌ Tiền cược không hợp lệ!');
 
-        await db.addMoney(userId, -bet);
+        await db.addMoney(userId, -bet, null, null, bet); 
 
         const suits = ['C','D','H','S']; const vals = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
         let deck = []; for(let s of suits) for(let v of vals) deck.push({val:v, suit:s});
@@ -1713,9 +1826,26 @@ client.on('messageCreate', async (message) => {
         const drawCaoThapCanvas = async (card, mul) => {
             const canvas = createCanvas(400, 300); const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#111827'; ctx.fillRect(0, 0, 400, 300);
+            
+            ctx.save();
+            ctx.shadowColor = 'rgba(245, 158, 11, 0.4)'; 
+            ctx.shadowBlur = 10;
             ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.roundRect?.(15, 15, 370, 270, 15); ctx.stroke();
-            ctx.fillStyle = '#f8fafc'; ctx.beginPath(); ctx.roundRect?.(145, 45, 110, 160, 12); ctx.fill();
+            ctx.restore();
+
+            ctx.save();
+            ctx.shadowColor = 'rgba(245, 158, 11, 0.7)';
+            ctx.shadowBlur = 24; 
+            ctx.fillStyle = 'rgba(245, 158, 11, 0.2)';
+            ctx.beginPath(); ctx.roundRect?.(141, 41, 118, 168, 14); ctx.fill();
+            ctx.restore();
+
+            ctx.save();
+            ctx.fillStyle = '#f8fafc'; 
+            ctx.beginPath(); ctx.roundRect?.(145, 45, 110, 160, 12); ctx.fill();
+            ctx.restore();
+
             const isRed = ['H', 'D'].includes(card.suit); ctx.fillStyle = isRed ? '#ef4444' : '#0f172a';
             ctx.font = 'bold 26px Arial'; ctx.fillText(card.val, 158, 80);
             let icon = '♣'; if (card.suit === 'D') icon = '♦'; if (card.suit === 'H') icon = '♥'; if (card.suit === 'S') icon = '♠';
@@ -1734,7 +1864,19 @@ client.on('messageCreate', async (message) => {
             ctx.beginPath(); ctx.roundRect?.(15, 15, 370, 270, 15); ctx.stroke(); 
             const particles = [{x: 50, y: 50, r: 4}, {x: 80, y: 220, r: 6}, {x: 320, y: 60, r: 5}, {x: 350, y: 230, r: 3}, {x: 90, y: 120, r: 3.5}, {x: 310, y: 170, r: 4}];
             ctx.fillStyle = '#fbbf24'; for (let p of particles) { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); }
-            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.roundRect?.(50, 75, 90, 130, 10); ctx.fill(); 
+            
+            ctx.save();
+            ctx.shadowColor = 'rgba(16, 185, 129, 0.7)';
+            ctx.shadowBlur = 24; 
+            ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+            ctx.beginPath(); ctx.roundRect?.(46, 71, 98, 138, 12); ctx.fill();
+            ctx.restore();
+
+            ctx.save();
+            ctx.fillStyle = '#ffffff'; 
+            ctx.beginPath(); ctx.roundRect?.(50, 75, 90, 130, 10); ctx.fill(); 
+            ctx.restore();
+
             const isRed = ['H', 'D'].includes(card.suit); ctx.fillStyle = isRed ? '#ef4444' : '#0f172a';
             ctx.font = 'bold 22px Arial'; ctx.fillText(card.val, 62, 105);
             let icon = '♣'; if (card.suit === 'D') icon = '♦'; if (card.suit === 'H') icon = '♥'; if (card.suit === 'S') icon = '♠';
@@ -1856,7 +1998,7 @@ client.on('messageCreate', async (message) => {
     }
 
     // ==========================================================
-    // 🦀 GAME 6: BẦU CUA NHÀ ĐỰC
+    // 🦀 GAME 6: BẦU CUA NHÀ ĐỰC [HIỂN THỊ MÀU THẮNG + GLOW NEON]
     // ==========================================================
     if (command === 'baucua' || command === 'bc') {
         const userId = message.author.id;
@@ -1916,7 +2058,7 @@ client.on('messageCreate', async (message) => {
             } 
             else if (id === 'ga') {
                 let grad = ctx.createLinearGradient(x, y-size*0.2, x, y+size*0.3); grad.addColorStop(0, '#f472b6'); grad.addColorStop(1, '#be185d'); ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(x, y + size*0.05, size*0.28, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(x - size*0.08, y - size*0.22, size*0.1, 0, Math.PI*2); ctx.arc(x + size*0.08, y - size*0.22, size*0.08, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(x - size*0.08, y - size*0.22, size*0.08, 0, Math.PI*2); ctx.fill();
                 ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.moveTo(x + size*0.2, y - size*0.05); ctx.lineTo(x + size*0.35, y); ctx.lineTo(x + size*0.2, y + size*0.05); ctx.closePath(); ctx.fill();
             } 
             else if (id === 'nai') {
@@ -1931,7 +2073,12 @@ client.on('messageCreate', async (message) => {
         const drawBauCuaCanvas = async (slots, rolledDice = null) => {
             const canvas = createCanvas(650, 420); const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, 650, 420);
+            
+            ctx.save();
+            ctx.shadowColor = 'rgba(56, 189, 248, 0.4)'; 
+            ctx.shadowBlur = 10;
             ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 4; ctx.strokeRect(15, 15, 620, 390);
+            ctx.restore();
 
             if (!rolledDice) {
                 ctx.fillStyle = 'rgba(56, 189, 248, 0.08)'; ctx.fillRect(30, 30, 590, 80);
@@ -1941,15 +2088,63 @@ client.on('messageCreate', async (message) => {
                 ctx.fillStyle = '#eab308'; ctx.font = 'bold 16px Arial'; ctx.fillText('🎲 KẾT QUẢ KỲ QUAY NHÀ ĐỰC:', 50, 75);
                 const itemMap = bcItems.reduce((acc, curr) => ({ ...acc, [curr.id]: curr }), {});
                 for (let d = 0; d < 3; d++) {
-                    const info = itemMap[rolledDice[d]]; ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.roundRect?.(340 + d * 85, 40, 64, 60, 10); ctx.fill();
-                    ctx.strokeStyle = info.color; ctx.lineWidth = 2.5; ctx.stroke(); drawLinhVatVector(ctx, info.id, 340 + d * 85 + 32, 40 + 30, 50); 
+                    const info = itemMap[rolledDice[d]]; 
+                    ctx.save();
+                    ctx.shadowColor = info.color;
+                    ctx.shadowBlur = 10;
+                    ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.roundRect?.(340 + d * 85, 40, 64, 60, 10); ctx.fill();
+                    ctx.strokeStyle = info.color; ctx.lineWidth = 2.5; ctx.stroke(); 
+                    ctx.restore();
+                    drawLinhVatVector(ctx, info.id, 340 + d * 85 + 32, 40 + 30, 50); 
                 }
             }
 
             const startX = 45, startY = 135, cellW = 175, cellH = 115, gap = 18;
             for (let idx = 0; idx < bcItems.length; idx++) {
                 const info = bcItems[idx]; const col = idx % 3; const row = Math.floor(idx / 3); const cx = startX + col * (cellW + gap); const cy = startY + row * (cellH + gap);
-                ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.roundRect?.(cx, cy, cellW, cellH, 15); ctx.fill(); ctx.strokeStyle = slots[info.id] > 0 ? '#ea3546' : '#334155'; ctx.lineWidth = slots[info.id] > 0 ? 3 : 1.5; ctx.stroke();
+
+                let borderStrokeColor = '#334155';
+                let strokeLineWidth = 1.5;
+                let applyNeonGlow = false;
+
+                if (rolledDice) {
+                    const isWinningItem = rolledDice.includes(info.id);
+                    if (isWinningItem && slots[info.id] > 0) {
+                        borderStrokeColor = '#eab308';
+                        strokeLineWidth = 4.0;
+                        applyNeonGlow = true;
+                    } else if (isWinningItem) {
+                        borderStrokeColor = '#10b981';
+                        strokeLineWidth = 2.5;
+                    } else if (slots[info.id] > 0) {
+                        borderStrokeColor = '#ef4444';
+                        strokeLineWidth = 2.0;
+                    }
+                } else {
+                    if (slots[info.id] > 0) {
+                        borderStrokeColor = '#ea3546';
+                        strokeLineWidth = 3.0;
+                    }
+                }
+
+                ctx.save();
+                ctx.shadowColor = applyNeonGlow ? borderStrokeColor : 'rgba(56, 189, 248, 0.6)';
+                ctx.shadowBlur = applyNeonGlow ? 24 : 15; 
+                ctx.fillStyle = applyNeonGlow ? 'rgba(234, 179, 8, 0.15)' : 'rgba(56, 189, 248, 0.1)';
+                ctx.beginPath(); ctx.roundRect?.(cx - 4, cy - 4, cellW + 8, cellH + 8, 18); ctx.fill();
+                ctx.restore();
+
+                ctx.save();
+                ctx.fillStyle = '#1e293b'; 
+                ctx.beginPath(); ctx.roundRect?.(cx, cy, cellW, cellH, 15); ctx.fill();
+                ctx.restore();
+
+                ctx.save();
+                ctx.strokeStyle = borderStrokeColor; 
+                ctx.lineWidth = strokeLineWidth; 
+                ctx.strokeRect(cx, cy, cellW, cellH);
+                ctx.restore();
+
                 drawLinhVatVector(ctx, info.id, cx + cellW / 2, cy + 45, 80); ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 13px Arial'; ctx.fillText(info.name, cx + 15, cy + 100);
                 ctx.fillStyle = slots[info.id] > 0 ? '#eab308' : '#475569'; ctx.font = 'bold 12px Arial'; ctx.fillText(slots[info.id] > 0 ? `${(slots[info.id]).toLocaleString()} xu` : '0', cx + 90, cy + 100);
             }
@@ -1989,7 +2184,8 @@ client.on('messageCreate', async (message) => {
             if (type === 'bet') {
                 const userMoney = db.getMoney(userId);
                 if (userMoney < game.betPerClick) { game.isProcessing = false; activeBauCua.set(userId, game); return i.followUp({ content: '❌ Số dư ví không đủ để đặt tiếp!', flags: [MessageFlags.Ephemeral] }); }
-                await db.addMoney(userId, -game.betPerClick); game.slots[target] += game.betPerClick; game.totalBet += game.betPerClick; activeBauCua.set(userId, game);
+                await db.addMoney(userId, -game.betPerClick, null, null, game.betPerClick); 
+                game.slots[target] += game.betPerClick; game.totalBet += game.betPerClick; activeBauCua.set(userId, game);
                 await i.editReply({ components: generateBCButtons(game.slots, true) }).catch(() => null);
                 const updateAttach = await drawBauCuaCanvas(game.slots); game.isProcessing = false; activeBauCua.set(userId, game);
                 await i.editReply({ files: [updateAttach], components: generateBCButtons(game.slots, false), attachments: [] }).catch(() => null); collector.resetTimer();
@@ -2005,7 +2201,7 @@ client.on('messageCreate', async (message) => {
         collector.on('end', async (collected, reason) => {
             const game = activeBauCua.get(userId); if (!game) return;
             if (reason === 'cancelled') {
-                if (game.totalBet > 0) await db.addMoney(userId, game.totalBet);
+                if (game.totalBet > 0) await db.addMoney(userId, game.totalBet, null, null, -game.totalBet); 
                 const cancelEmbed = new EmbedBuilder().setColor('#64748b').setTitle('❌ ĐÃ HỦY VÁN BẦU CUA').setDescription(`Bàn cược đã được đóng, hoàn trả lại **${game.totalBet.toLocaleString()} xu** cho <@${userId}>.`);
                 await response.edit({ embeds: [cancelEmbed], components: [], attachments: [] }).catch(() => null); activeBauCua.delete(userId); return;
             }
@@ -2026,7 +2222,7 @@ client.on('messageCreate', async (message) => {
     }
 
     // ==========================================================
-    // ✌️✊🖐️ GAME 7: XÙ XÌ NHÀ ĐỰC
+    // ✌️✊🖐️ GAME 7: XÙ XÌ NHÀ ĐỰC [LAYER GLOW FIXED]
     // ==========================================================
     if (command === 'xuxi' || command === 'xx') {
         const userId = message.author.id; const target = message.mentions.users.first(); 
@@ -2042,16 +2238,32 @@ client.on('messageCreate', async (message) => {
         const drawXuXiCanvas = async (playerChoice = null, botChoice = null, resultText = "Đang chờ hai bên ra chiêu...", leftLabel = "BẠN", rightLabel = "NHÀ CÁI", isFinished = false, isWinner = false, userNewMoney = 0, betAmount = 0) => {
             const canvas = createCanvas(600, 320); const ctx = canvas.getContext('2d');
             const bgGrad = ctx.createLinearGradient(0, 0, 0, 320); bgGrad.addColorStop(0, '#0f172a'); bgGrad.addColorStop(1, '#020617'); ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, 600, 320);
-            ctx.shadowColor = '#10b981'; ctx.shadowBlur = 10; ctx.strokeStyle = '#10b981'; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect?.(20, 20, 560, 280, 20); ctx.stroke(); ctx.shadowBlur = 0;
+            
+            ctx.save();
+            ctx.shadowColor = 'rgba(16, 185, 129, 0.4)'; ctx.shadowBlur = 10; 
+            ctx.strokeStyle = '#10b981'; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect?.(20, 20, 560, 280, 20); ctx.stroke(); 
+            ctx.restore();
+
             ctx.fillStyle = '#ffffff'; ctx.font = 'bold 22px Arial'; ctx.fillText('QUYẾT ĐẤU XÙ XÌ MINIGAME', 40, 58);
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(40, 72); ctx.lineTo(560, 72); ctx.stroke();
 
-            const drawCardFrame = (x, y, w, h, label) => {
-                ctx.fillStyle = 'rgba(30, 41, 59, 0.7)'; ctx.beginPath(); ctx.roundRect?.(x, y, w, h, 16); ctx.fill();
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'; ctx.lineWidth = 1.5; ctx.stroke();
+            const drawCardFrame = (x, y, w, h, label, isTargetGlow = false) => {
+                ctx.save();
+                ctx.shadowColor = isTargetGlow ? 'rgba(16, 185, 129, 0.7)' : 'rgba(59, 130, 246, 0.5)';
+                ctx.shadowBlur = 24; 
+                ctx.fillStyle = isTargetGlow ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.1)';
+                ctx.beginPath(); ctx.roundRect?.(x - 4, y - 4, w + 8, h + 8, 20); ctx.fill();
+                ctx.restore();
+
+                ctx.save();
+                ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+                ctx.beginPath(); ctx.roundRect?.(x, y, w, h, 16); ctx.fill();
+                ctx.restore();
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'; ctx.lineWidth = 1.5; ctx.strokeRect(x, y, w, h);
                 ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 12px Arial'; ctx.fillText(label.toUpperCase(), x + 20, y + 25);
             };
-            drawCardFrame(50, 90, 220, 150, leftLabel); drawCardFrame(330, 90, 220, 150, rightLabel);
+            drawCardFrame(50, 90, 220, 150, leftLabel, playerChoice !== null); drawCardFrame(330, 90, 220, 150, rightLabel, botChoice !== null);
 
             const drawSymbol = (x, y, type) => {
                 ctx.save(); ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 4;
@@ -2090,7 +2302,7 @@ client.on('messageCreate', async (message) => {
                 ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.roundRect?.(35, 248, 530, 48, 10); ctx.fill();
                 ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 10px Arial';
                 ctx.fillText('ĐẶT CƯỢC', 100, 263);
-                ctx.fillText('THẮNG', 285, 263);
+                ctx.fillText('THẰNG', 285, 263);
                 ctx.fillText('SỐ DƯ', 460, 263);
                 ctx.fillStyle = '#ffffff'; ctx.font = 'bold 13px Arial';
                 
@@ -2125,14 +2337,14 @@ client.on('messageCreate', async (message) => {
             if (isNaN(bet) || bet <= 0 || currentMoney < bet) return message.reply('❌ Tiền cược thách đấu không hợp lệ!');
             if (targetMoney < bet) return message.reply(`❌ <@${target.id}> không đủ tiền cược (Yêu cầu: **${bet.toLocaleString()}** xu, hiện có: **${targetMoney.toLocaleString()}** xu)!`);
 
-            await db.addMoney(userId, -bet);
+            await db.addMoney(userId, -bet, null, null, bet); 
             const pvpState = { mode: 'pvp', challengerId: userId, opponentId: target.id, bet, status: 'pending', challengerChoice: null, opponentChoice: null, challengerInteraction: null, opponentInteraction: null, isProcessing: false, response: null };
             activeXuXi.set(userId, pvpState); activeXuXi.set(target.id, pvpState);
 
             const inviteEmbed = new EmbedBuilder().setColor('#f59e0b').setTitle('⚔️ LỜI THÁCH ĐẤU XÙ XÌ ĐẤU TRƯỜNG').setDescription(`🔥 <@${userId}> thách đấu Xù Xì với <@${target.id}>!\n💰 Tiền cược: **${bet.toLocaleString()}** xu\n⏰ Hạn giờ phản hồi: **60 giây**`);
-            const inviteRow = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`xx_pvp_accept_${userId}_${target.id}`).setLabel('✅ Chấp Nhận').setStyle(ButtonStyle.Success), new ButtonBuilder().setCustomId(`xx_pvp_decline_${userId}_${target.id}`).setLabel('❌ Từ Chối').setStyle(ButtonStyle.Danger));
+            const inviteRow = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId?.(`xx_pvp_accept_${userId}_${target.id}`).setLabel('✅ Chấp Nhận').setStyle(ButtonStyle.Success), new ButtonBuilder().setCustomId?.(`xx_pvp_decline_${userId}_${target.id}`).setLabel('❌ Từ Chối').setStyle(ButtonStyle.Danger));
             const inviteMsg = await message.reply({ embeds: [inviteEmbed], components: [inviteRow] }).catch(() => null);
-            if (!inviteMsg) { await db.addMoney(userId, bet); activeXuXi.delete(userId); activeXuXi.delete(target.id); return; }
+            if (!inviteMsg) { await db.addMoney(userId, bet, null, null, -bet); activeXuXi.delete(userId); activeXuXi.delete(target.id); return; } 
             pvpState.response = inviteMsg;
 
             const inviteCollector = inviteMsg.createMessageComponentCollector({ time: 60000 });
@@ -2149,17 +2361,19 @@ client.on('messageCreate', async (message) => {
             inviteCollector.on('end', async (collected, reason) => {
                 const game = activeXuXi.get(userId); if (!game || game.status !== 'pending') return;
                 if (reason !== 'accepted') {
-                    await db.addMoney(userId, bet); const errText = reason === 'time' ? 'Lời thách đấu tự động hủy do đối thủ không phản hồi.' : 'Lời thách đấu đã bị từ chối.';
+                    await db.addMoney(userId, bet, null, null, -bet); 
+                    const errText = reason === 'time' ? 'Lời thách đấu tự động hủy do đối thủ không phản hồi.' : 'Lời thách đấu đã bị từ chối.';
                     await inviteMsg.edit({ embeds: [new EmbedBuilder().setColor('#ef4444').setTitle('❌ THÁCH ĐẤU BỊ HỦY').setDescription(errText)], components: [] }).catch(() => null);
                     activeXuXi.delete(userId); activeXuXi.delete(target.id);
                 } else {
-                    game.status = 'playing'; await db.addMoney(target.id, -bet); activeXuXi.set(userId, game); activeXuXi.set(target.id, game);
+                    game.status = 'playing'; await db.addMoney(target.id, -bet, null, null, bet); 
+                    activeXuXi.set(userId, game); activeXuXi.set(target.id, game);
                     const initialAttach = await drawXuXiCanvas(null, null, "Đang chờ hai bên ra chiêu...", message.author.username, target.username);
                     const playEmbed = new EmbedBuilder().setColor('#10b981').setTitle('⚔️ ĐẤU TRƯỜNG XÙ XÌ PvP').setDescription(`🔥 Quyết đấu giữa <@${userId}> và <@${target.id}>!\n💰 Tổng hũ thưởng: **${(bet * 2).toLocaleString()}** xu\n⏰ Hạn giờ ra chiêu: **60 giây**`).setImage(`attachment://${initialAttach.name}`);
-                    const playRow = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`xx_pvp_keo_${userId}_${target.id}`).setLabel('✂️ Kéo').setStyle(ButtonStyle.Primary), new ButtonBuilder().setCustomId(`xx_pvp_bua_${userId}_${target.id}`).setLabel('🔨 Búa').setStyle(ButtonStyle.Primary), new ButtonBuilder().setCustomId(`xx_pvp_bao_${userId}_${target.id}`).setLabel('📄 Bao').setStyle(ButtonStyle.Primary));
+                    const playRow = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId?.(`xx_pvp_keo_${userId}_${target.id}`).setLabel('✂️ Kéo').setStyle(ButtonStyle.Primary), new ButtonBuilder().setCustomId?.(`xx_pvp_bua_${userId}_${target.id}`).setLabel('🔨 Búa').setStyle(ButtonStyle.Primary), new ButtonBuilder().setCustomId?.(`xx_pvp_bao_${userId}_${target.id}`).setLabel('📄 Bao').setStyle(ButtonStyle.Primary));
                     
                     const gameMsg = await inviteMsg.edit({ embeds: [playEmbed], files: [initialAttach], components: [playRow], attachments: [] }).catch(() => null);
-                    if (!gameMsg) { await db.addMoney(userId, bet); await db.addMoney(target.id, bet); activeXuXi.delete(userId); activeXuXi.delete(target.id); return; }
+                    if (!gameMsg) { await db.addMoney(userId, bet, null, null, -bet); await db.addMoney(target.id, bet, null, null, -bet); activeXuXi.delete(userId); activeXuXi.delete(target.id); return; } 
 
                     const gameCollector = gameMsg.createMessageComponentCollector({ time: 60000 });
                     gameCollector.on('collect', async i => {
@@ -2180,7 +2394,7 @@ client.on('messageCreate', async (message) => {
                         activeXuXi.set(userId, currentGame); activeXuXi.set(target.id, currentGame);
                         const statusDesc = `👤 <@${userId}>: ${currentGame.challengerChoice ? '✅ Đã ra chiêu 🔒' : '⏳ Đang suy nghĩ...'}\n👤 <@${target.id}>: ${currentGame.opponentChoice ? '✅ Đã ra chiêu 🔒' : '⏳ Đang suy nghĩ...'}`;
                         
-                        await gameMsg.edit({ embeds: [new EmbedBuilder().setColor('#ffaa00').setTitle('⚔️ ĐẤU TRƯỜCO LÀ PvP').setDescription(`🔥 Trận đấu đang diễn ra!\n💰 Cược: **${bet.toLocaleString()}** xu\n\n${statusDesc}`).setImage(`attachment://${initialAttach.name}`)] }).catch(() => null);
+                        await gameMsg.edit({ embeds: [new EmbedBuilder().setColor('#ffaa00').setTitle('⚔️ ĐẤU TRƯỜNG XÙ XÌ PvP').setDescription(`🔥 Trận đấu đang diễn ra!\n💰 Cược: **${bet.toLocaleString()}** xu\n\n${statusDesc}`).setImage(`attachment://${initialAttach.name}`)] }).catch(() => null);
                         if (currentGame.challengerChoice && currentGame.opponentChoice) gameCollector.stop('both_chosen');
                     });
 
@@ -2228,7 +2442,7 @@ client.on('messageCreate', async (message) => {
         const currentMoney = db.getMoney(userId); const rawBet = args[0]?.replace(/[\.,]/g, ''); let bet = rawBet?.toLowerCase() === 'all' ? currentMoney : parseInt(rawBet);
         if (isNaN(bet) || bet <= 0 || currentMoney < bet) return message.reply('❌ Số tiền cược không hợp lệ!');
 
-        await db.addMoney(userId, -bet); activeXuXi.set(userId, { bet, isProcessing: false, mode: 'pve' });
+        await db.addMoney(userId, -bet, null, null, bet); activeXuXi.set(userId, { bet, isProcessing: false, mode: 'pve' }); 
         const initialAttach = await drawXuXiCanvas(null, null, "Đang chờ bạn ra chiêu...");
         const startEmbed = new EmbedBuilder().setColor('#10b981').setTitle('✌️✊🖐️ SẢNH ĐẤU XÙ XÌ NHÀ ĐỰC').setDescription(`👤 Người chơi: <@${userId}>\n💰 Tiền cược: **${bet.toLocaleString()}** xu\n⏰ Hạn giờ ra chiêu: **60 giây**`).setImage(`attachment://${initialAttach.name}`);
         

@@ -146,6 +146,7 @@ function saveData(data) {
 function createDefaultUser() {
     return { 
         money: 0, 
+        totalBetAmount: 0, // Trường mới lưu tổng lượng tiền đã cược tích lũy
         lastDaily: 0, 
         maxWinBet: 0,
         streak: 0, 
@@ -186,11 +187,16 @@ module.exports = {
     hasUser: (userId) => !!getData().users[userId],
     getGiftcodes: () => getData().giftcodes || {},
 
-    addMoney: (userId, amount, isWin = null, gameType = null) => {
+    addMoney: (userId, amount, isWin = null, gameType = null, originalBet = 0) => {
         const data = getData();
         if (!data.users[userId]) data.users[userId] = createDefaultUser();
         const user = data.users[userId];
         user.money += amount;
+
+        // Ghi nhận tiền cược lũy kế nếu có truyền gốc cược vào
+        if (originalBet > 0) {
+            user.totalBetAmount = (user.totalBetAmount || 0) + originalBet;
+        }
 
         if (isWin !== null && gameType) {
             if (!user[gameType]) user[gameType] = { total: 0, win: 0 };
