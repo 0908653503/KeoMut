@@ -53,6 +53,11 @@
       "money": 500000,
       "maxUses": 20,
       "usedUsers": []
+    },
+    "samancuc": {
+      "money": 100000,
+      "maxUses": 50,
+      "usedUsers": []
     }
   }
 }
