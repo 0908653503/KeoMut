@@ -83,15 +83,15 @@
       }
     },
     "480061855956598795": {
-      "money": 789000,
+      "money": 710022,
       "lastDaily": 0,
       "maxWinBet": 789000,
-      "streak": 1,
+      "streak": 0,
       "maxStreak": 4,
       "lastXinTien": 1784299668345,
       "xinTienCount": 10,
       "taixiu": {
-        "total": 4,
+        "total": 5,
         "win": 2
       },
       "domin": {
@@ -372,13 +372,6 @@
   },
   "taixiuHistory": [
     {
-      "diceString": "⚂⚃⚁",
-      "total": 9,
-      "result": "XỈU",
-      "isWin": true,
-      "amountChange": "+50.0K"
-    },
-    {
       "diceString": "⚀⚅⚁",
       "total": 9,
       "result": "XỈU",
@@ -436,6 +429,13 @@
     },
     {
       "diceString": "⚀⚃⚄",
+      "total": 10,
+      "result": "XỈU",
+      "isWin": false,
+      "amountChange": "-79.0K"
+    },
+    {
+      "diceString": "⚀⚂⚅",
       "total": 10,
       "result": "XỈU",
       "isWin": false,
