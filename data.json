@@ -340,7 +340,7 @@
       "money": 0,
       "lastDaily": 0,
       "maxWinBet": 3435000,
-      "streak": 1,
+      "streak": 0,
       "maxStreak": 4,
       "lastXinTien": 0,
       "xinTienCount": 0,
@@ -361,7 +361,7 @@
         "win": 0
       },
       "caothap": {
-        "total": 36,
+        "total": 37,
         "win": 19
       },
       "baucua": {
