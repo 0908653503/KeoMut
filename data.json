@@ -1,10 +1,10 @@
 {
   "users": {
     "1354110406456643597": {
-      "money": 0,
+      "money": 121562085,
       "lastDaily": 1784309171494,
-      "maxWinBet": 90145989,
-      "streak": 0,
+      "maxWinBet": 121562085,
+      "streak": 1,
       "maxStreak": 5,
       "lastXinTien": 1784305505535,
       "xinTienCount": 10,
@@ -25,8 +25,8 @@
         "win": 0
       },
       "caothap": {
-        "total": 31,
-        "win": 17
+        "total": 32,
+        "win": 18
       },
       "baucua": {
         "total": 0,
