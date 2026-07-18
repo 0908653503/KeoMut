@@ -43,10 +43,10 @@
       "totalBetAmount": 159920540
     },
     "750012040432582776": {
-      "money": 1300000,
+      "money": 3250000,
       "lastDaily": 1784309535995,
-      "maxWinBet": 906000,
-      "streak": 2,
+      "maxWinBet": 1950000,
+      "streak": 3,
       "maxStreak": 6,
       "lastXinTien": 1784341731030,
       "xinTienCount": 10,
@@ -79,8 +79,8 @@
         "win": 0
       },
       "crash": {
-        "total": 43,
-        "win": 19
+        "total": 44,
+        "win": 20
       },
       "totalBetAmount": 10295999
     },
