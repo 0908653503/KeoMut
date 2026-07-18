@@ -37,7 +37,7 @@
         "win": 0
       },
       "crash": {
-        "total": 29,
+        "total": 30,
         "win": 14
       },
       "totalBetAmount": 3167000
@@ -169,7 +169,7 @@
       "totalBetAmount": 8218368
     },
     "1225309541214720124": {
-      "money": 0,
+      "money": 300000,
       "lastDaily": 0,
       "maxWinBet": 662000,
       "streak": 0,
@@ -205,7 +205,7 @@
         "win": 0
       },
       "crash": {
-        "total": 14,
+        "total": 15,
         "win": 4
       },
       "totalBetAmount": 2062000
