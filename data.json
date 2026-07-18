@@ -127,10 +127,10 @@
       "totalBetAmount": 109219526
     },
     "1318231594162454573": {
-      "money": 2962004,
+      "money": 3529894,
       "lastDaily": 1784309302282,
       "maxWinBet": 2370000,
-      "streak": 1,
+      "streak": 2,
       "maxStreak": 6,
       "lastXinTien": 1784309630485,
       "xinTienCount": 10,
@@ -143,8 +143,8 @@
         "win": 2
       },
       "blackjack": {
-        "total": 44,
-        "win": 18
+        "total": 45,
+        "win": 19
       },
       "slots": {
         "total": 0,
@@ -166,7 +166,7 @@
         "total": 43,
         "win": 17
       },
-      "totalBetAmount": 27602922
+      "totalBetAmount": 28170812
     },
     "1225309541214720124": {
       "money": 12050000,
@@ -337,7 +337,7 @@
       "totalBetAmount": 75087772
     },
     "510672724620869632": {
-      "money": 1350000,
+      "money": 0,
       "lastDaily": 0,
       "maxWinBet": 3435000,
       "streak": 2,
@@ -376,7 +376,7 @@
         "total": 19,
         "win": 3
       },
-      "totalBetAmount": 28343175
+      "totalBetAmount": 29693175
     }
   },
   "taixiuHistory": [
