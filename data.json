@@ -37,7 +37,7 @@
         "win": 0
       },
       "crash": {
-        "total": 47,
+        "total": 48,
         "win": 21
       },
       "totalBetAmount": 504403421
@@ -295,7 +295,7 @@
       "totalBetAmount": 161881034
     },
     "870523754369908766": {
-      "money": 500000,
+      "money": 0,
       "lastDaily": 0,
       "maxWinBet": 29680074,
       "streak": 0,
@@ -334,7 +334,7 @@
         "total": 32,
         "win": 11
       },
-      "totalBetAmount": 81987772
+      "totalBetAmount": 82487772
     },
     "510672724620869632": {
       "money": 300000,
