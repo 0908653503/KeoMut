@@ -169,7 +169,7 @@
       "totalBetAmount": 7948368
     },
     "1225309541214720124": {
-      "money": 300000,
+      "money": 200000,
       "lastDaily": 0,
       "maxWinBet": 422000,
       "streak": 0,
@@ -181,7 +181,7 @@
         "win": 0
       },
       "domin": {
-        "total": 13,
+        "total": 14,
         "win": 1
       },
       "blackjack": {
@@ -208,7 +208,7 @@
         "total": 12,
         "win": 3
       },
-      "totalBetAmount": 800000
+      "totalBetAmount": 900000
     },
     "911045173256003634": {
       "money": 150000,
