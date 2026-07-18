@@ -169,7 +169,7 @@
       "totalBetAmount": 48644941
     },
     "1225309541214720124": {
-      "money": 400000,
+      "money": 900000,
       "lastDaily": 0,
       "maxWinBet": 9900000,
       "streak": 0,
@@ -337,7 +337,7 @@
       "totalBetAmount": 75087772
     },
     "510672724620869632": {
-      "money": 300000,
+      "money": 0,
       "lastDaily": 0,
       "maxWinBet": 3435000,
       "streak": 0,
@@ -376,7 +376,7 @@
         "total": 19,
         "win": 3
       },
-      "totalBetAmount": 36373925
+      "totalBetAmount": 36673925
     }
   },
   "taixiuHistory": [
@@ -516,7 +516,7 @@
         },
         {
           "userId": "1225309541214720124",
-          "claimedAt": 1784310731450
+          "claimedAt": 1784394280868
         },
         {
           "userId": "911045173256003634",
