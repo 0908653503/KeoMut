@@ -337,7 +337,7 @@
       "totalBetAmount": 75087772
     },
     "510672724620869632": {
-      "money": 1822500,
+      "money": 0,
       "lastDaily": 0,
       "maxWinBet": 3435000,
       "streak": 3,
@@ -376,7 +376,7 @@
         "total": 19,
         "win": 3
       },
-      "totalBetAmount": 29693175
+      "totalBetAmount": 31515675
     }
   },
   "taixiuHistory": [
