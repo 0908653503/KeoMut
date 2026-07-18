@@ -85,7 +85,7 @@
       "totalBetAmount": 7995999
     },
     "480061855956598795": {
-      "money": 5596000,
+      "money": 4596000,
       "lastDaily": 0,
       "maxWinBet": 21647465,
       "streak": 0,
@@ -93,7 +93,7 @@
       "lastXinTien": 1784351515339,
       "xinTienCount": 5,
       "taixiu": {
-        "total": 79,
+        "total": 80,
         "win": 35
       },
       "domin": {
@@ -124,7 +124,7 @@
         "total": 38,
         "win": 17
       },
-      "totalBetAmount": 92608526
+      "totalBetAmount": 93608526
     },
     "1318231594162454573": {
       "money": 0,
@@ -169,16 +169,16 @@
       "totalBetAmount": 16016280
     },
     "1225309541214720124": {
-      "money": 2601450,
+      "money": 5202900,
       "lastDaily": 0,
       "maxWinBet": 2601450,
-      "streak": 2,
+      "streak": 3,
       "maxStreak": 5,
       "lastXinTien": 1784311016255,
       "xinTienCount": 10,
       "taixiu": {
-        "total": 25,
-        "win": 12
+        "total": 26,
+        "win": 13
       },
       "domin": {
         "total": 23,
@@ -208,7 +208,7 @@
         "total": 21,
         "win": 5
       },
-      "totalBetAmount": 24831000
+      "totalBetAmount": 27432450
     },
     "911045173256003634": {
       "money": 0,
@@ -381,20 +381,6 @@
   },
   "taixiuHistory": [
     {
-      "diceString": "⚀⚀⚄",
-      "total": 7,
-      "result": "XỈU",
-      "isWin": false,
-      "amountChange": "-300.0K"
-    },
-    {
-      "diceString": "⚁⚄⚀",
-      "total": 8,
-      "result": "XỈU",
-      "isWin": true,
-      "amountChange": "+300.0K"
-    },
-    {
       "diceString": "⚁⚄⚁",
       "total": 9,
       "result": "XỈU",
@@ -449,6 +435,20 @@
       "result": "XỈU",
       "isWin": false,
       "amountChange": "-1.0K"
+    },
+    {
+      "diceString": "⚃⚄⚄",
+      "total": 14,
+      "result": "TÀI",
+      "isWin": false,
+      "amountChange": "-1000.0K"
+    },
+    {
+      "diceString": "⚂⚅⚂",
+      "total": 12,
+      "result": "TÀI",
+      "isWin": true,
+      "amountChange": "+2601.4K"
     }
   ],
   "giftcodes": {
