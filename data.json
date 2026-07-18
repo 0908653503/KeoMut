@@ -252,13 +252,13 @@
       }
     },
     "884359312904945685": {
-      "money": 100000,
+      "money": 150000,
       "lastDaily": 0,
       "maxWinBet": 4991444,
       "streak": 0,
       "maxStreak": 8,
-      "lastXinTien": 1784385554737,
-      "xinTienCount": 2,
+      "lastXinTien": 1784385562182,
+      "xinTienCount": 3,
       "taixiu": {
         "total": 0,
         "win": 0
