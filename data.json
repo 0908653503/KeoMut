@@ -43,7 +43,7 @@
       "totalBetAmount": 1967000
     },
     "750012040432582776": {
-      "money": 400000,
+      "money": 300000,
       "lastDaily": 1784309535995,
       "maxWinBet": 650000,
       "streak": 0,
@@ -59,7 +59,7 @@
         "win": 0
       },
       "blackjack": {
-        "total": 73,
+        "total": 74,
         "win": 35
       },
       "slots": {
@@ -82,7 +82,7 @@
         "total": 31,
         "win": 12
       },
-      "totalBetAmount": 5007000
+      "totalBetAmount": 5107000
     },
     "480061855956598795": {
       "money": 650000,
