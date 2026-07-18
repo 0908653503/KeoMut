@@ -1,10 +1,10 @@
 {
   "users": {
     "1354110406456643597": {
-      "money": 367948489,
+      "money": 371948489,
       "lastDaily": 1784309171494,
       "maxWinBet": 366868489,
-      "streak": 2,
+      "streak": 3,
       "maxStreak": 5,
       "lastXinTien": 1784305505535,
       "xinTienCount": 10,
@@ -33,8 +33,8 @@
         "win": 0
       },
       "xuxi": {
-        "total": 0,
-        "win": 0
+        "total": 1,
+        "win": 1
       },
       "crash": {
         "total": 49,
@@ -201,7 +201,7 @@
         "win": 0
       },
       "xuxi": {
-        "total": 0,
+        "total": 1,
         "win": 0
       },
       "crash": {
