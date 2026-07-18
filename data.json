@@ -1,7 +1,7 @@
 {
   "users": {
     "1354110406456643597": {
-      "money": 372948489,
+      "money": 0,
       "lastDaily": 1784309171494,
       "maxWinBet": 366868489,
       "streak": 4,
@@ -40,7 +40,7 @@
         "total": 49,
         "win": 22
       },
-      "totalBetAmount": 1252431070
+      "totalBetAmount": 1625379559
     },
     "750012040432582776": {
       "money": 7395000,
