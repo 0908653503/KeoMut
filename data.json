@@ -619,6 +619,11 @@
           "claimedAt": 1784395071043
         }
       ]
+    },
+    "cobacbip": {
+      "money": 5000000,
+      "maxUses": 10,
+      "usedUsers": []
     }
   }
 }
