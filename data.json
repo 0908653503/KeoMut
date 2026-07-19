@@ -85,7 +85,7 @@
       "totalBetAmount": 83064843
     },
     "480061855956598795": {
-      "money": 0,
+      "money": 5000000,
       "lastDaily": 0,
       "maxWinBet": 23780918,
       "streak": 0,
@@ -623,7 +623,12 @@
     "cobacbip": {
       "money": 5000000,
       "maxUses": 10,
-      "usedUsers": []
+      "usedUsers": [
+        {
+          "userId": "480061855956598795",
+          "claimedAt": 1784478843348
+        }
+      ]
     }
   }
 }
