@@ -88,7 +88,7 @@
       "money": 2538562,
       "lastDaily": 0,
       "maxWinBet": 23780918,
-      "streak": 5,
+      "streak": 0,
       "maxStreak": 9,
       "lastXinTien": 1784471170726,
       "xinTienCount": 10,
@@ -113,7 +113,7 @@
         "win": 28
       },
       "baucua": {
-        "total": 0,
+        "total": 1,
         "win": 0
       },
       "xuxi": {
