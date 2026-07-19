@@ -79,13 +79,13 @@
         "win": 0
       },
       "crash": {
-        "total": 58,
+        "total": 59,
         "win": 27
       },
       "totalBetAmount": 116684843
     },
     "480061855956598795": {
-      "money": 616900,
+      "money": 0,
       "lastDaily": 0,
       "maxWinBet": 23780918,
       "streak": 0,
@@ -124,13 +124,13 @@
         "total": 62,
         "win": 24
       },
-      "totalBetAmount": 329289455
+      "totalBetAmount": 329906355
     },
     "1318231594162454573": {
       "money": 7218000,
       "lastDaily": 1784309302282,
       "maxWinBet": 3000000,
-      "streak": 1,
+      "streak": 0,
       "maxStreak": 8,
       "lastXinTien": 1784394513377,
       "xinTienCount": 10,
@@ -163,7 +163,7 @@
         "win": 0
       },
       "crash": {
-        "total": 50,
+        "total": 51,
         "win": 21
       },
       "totalBetAmount": 71108042
