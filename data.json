@@ -172,7 +172,7 @@
       "money": 96762812,
       "lastDaily": 0,
       "maxWinBet": 175162500,
-      "streak": 2,
+      "streak": 0,
       "maxStreak": 11,
       "lastXinTien": 1784394417133,
       "xinTienCount": 10,
@@ -193,7 +193,7 @@
         "win": 0
       },
       "caothap": {
-        "total": 1031,
+        "total": 1032,
         "win": 644
       },
       "baucua": {
@@ -253,7 +253,7 @@
       "totalBetAmount": 794640
     },
     "884359312904945685": {
-      "money": 300000,
+      "money": 200000,
       "lastDaily": 0,
       "maxWinBet": 23327859,
       "streak": 0,
@@ -292,7 +292,7 @@
         "total": 41,
         "win": 21
       },
-      "totalBetAmount": 749901806
+      "totalBetAmount": 750001806
     },
     "870523754369908766": {
       "money": 0,
