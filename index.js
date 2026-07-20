@@ -316,7 +316,7 @@ client.on('messageCreate', async (message) => {
         
         const lastUsed = tagBotCooldown.get(userId) || 0;
         const now = Date.now();
-        const cooldownTime = 3 * 60 * 1000; 
+        const cooldownTime = 1.5 * 60 * 1000; 
 
         if (now - lastUsed < cooldownTime) {
             const timeLeft = cooldownTime - (now - lastUsed);
