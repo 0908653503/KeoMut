@@ -377,6 +377,48 @@
         "win": 3
       },
       "totalBetAmount": 111040758
+    },
+    "1513010581957771394": {
+      "money": 50000,
+      "totalBetAmount": 0,
+      "lastDaily": 0,
+      "maxWinBet": 0,
+      "streak": 0,
+      "maxStreak": 0,
+      "lastXinTien": 0,
+      "xinTienCount": 0,
+      "taixiu": {
+        "total": 0,
+        "win": 0
+      },
+      "domin": {
+        "total": 0,
+        "win": 0
+      },
+      "blackjack": {
+        "total": 0,
+        "win": 0
+      },
+      "slots": {
+        "total": 0,
+        "win": 0
+      },
+      "caothap": {
+        "total": 0,
+        "win": 0
+      },
+      "baucua": {
+        "total": 0,
+        "win": 0
+      },
+      "xuxi": {
+        "total": 0,
+        "win": 0
+      },
+      "crash": {
+        "total": 0,
+        "win": 0
+      }
     }
   },
   "taixiuHistory": [
