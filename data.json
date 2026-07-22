@@ -169,15 +169,15 @@
       "totalBetAmount": 3374802261
     },
     "1225309541214720124": {
-      "money": 185000000,
+      "money": 180000000,
       "lastDaily": 0,
       "maxWinBet": 175162500,
-      "streak": 2,
+      "streak": 0,
       "maxStreak": 11,
       "lastXinTien": 1784733397542,
       "xinTienCount": 10,
       "taixiu": {
-        "total": 854,
+        "total": 855,
         "win": 445
       },
       "domin": {
@@ -208,7 +208,7 @@
         "total": 79,
         "win": 17
       },
-      "totalBetAmount": 5196599542
+      "totalBetAmount": 5201599542
     },
     "911045173256003634": {
       "money": 0,
@@ -423,13 +423,6 @@
   },
   "taixiuHistory": [
     {
-      "diceString": "⚅⚂⚂",
-      "total": 12,
-      "result": "TÀI",
-      "isWin": true,
-      "amountChange": "+5000.0K"
-    },
-    {
       "diceString": "⚀⚅⚅",
       "total": 13,
       "result": "TÀI",
@@ -491,6 +484,13 @@
       "result": "XỈU",
       "isWin": true,
       "amountChange": "+5000.0K"
+    },
+    {
+      "diceString": "⚅⚃⚁",
+      "total": 12,
+      "result": "TÀI",
+      "isWin": false,
+      "amountChange": "-5000.0K"
     }
   ],
   "giftcodes": {
