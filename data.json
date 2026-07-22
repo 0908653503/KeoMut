@@ -295,13 +295,13 @@
       "totalBetAmount": 1270488034
     },
     "870523754369908766": {
-      "money": 250000,
+      "money": 300000,
       "lastDaily": 0,
       "maxWinBet": 29680074,
       "streak": 0,
       "maxStreak": 5,
-      "lastXinTien": 1784716867407,
-      "xinTienCount": 9,
+      "lastXinTien": 1784716874039,
+      "xinTienCount": 10,
       "taixiu": {
         "total": 30,
         "win": 16
