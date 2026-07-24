@@ -85,7 +85,7 @@
       "totalBetAmount": 544097073
     },
     "480061855956598795": {
-      "money": 100000,
+      "money": 200000,
       "lastDaily": 0,
       "maxWinBet": 23780918,
       "streak": 0,
@@ -626,7 +626,7 @@
       "usedUsers": [
         {
           "userId": "480061855956598795",
-          "claimedAt": 1784741899214
+          "claimedAt": 1784857859298
         },
         {
           "userId": "750012040432582776",
