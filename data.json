@@ -256,7 +256,7 @@
       "money": 1000000,
       "lastDaily": 0,
       "maxWinBet": 336000000,
-      "streak": 1,
+      "streak": 0,
       "maxStreak": 31,
       "lastXinTien": 1785003268368,
       "xinTienCount": 10,
@@ -273,7 +273,7 @@
         "win": 38
       },
       "slots": {
-        "total": 105,
+        "total": 106,
         "win": 47
       },
       "caothap": {
