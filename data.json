@@ -295,10 +295,10 @@
       "totalBetAmount": 4150719543
     },
     "870523754369908766": {
-      "money": 39000000,
+      "money": 43000000,
       "lastDaily": 0,
       "maxWinBet": 29680074,
-      "streak": 4,
+      "streak": 5,
       "maxStreak": 10,
       "lastXinTien": 1784968620104,
       "xinTienCount": 10,
@@ -311,8 +311,8 @@
         "win": 1
       },
       "blackjack": {
-        "total": 76,
-        "win": 38
+        "total": 77,
+        "win": 39
       },
       "slots": {
         "total": 6,
@@ -334,7 +334,7 @@
         "total": 81,
         "win": 27
       },
-      "totalBetAmount": 369591629
+      "totalBetAmount": 373591629
     },
     "510672724620869632": {
       "money": 0,
